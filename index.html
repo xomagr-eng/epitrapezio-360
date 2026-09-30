@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ΕΠΙΤΡΑΠΕΖΙΟ Studio — Δημιουργία Επιτραπέζιων Παιχνιδιών</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#e23b3b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Επιτραπέζιο">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0e1116; --bg2:#161b22; --bg3:#1e242d; --line:#2b333e;
+  --txt:#e8edf3; --muted:#9aa7b6; --accent:#e23b3b; --accent2:#ff5a5a;
+  --gold:#e5b567; --ok:#3fb950; --info:#5aa9ff;
+  --radius:12px; --sh:0 6px 22px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;
+  background:radial-gradient(1200px 800px at 80% -10%,#1a2230,#0e1116 60%);
+  color:var(--txt); min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit}
+.hidden{display:none!important}
+
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;background:linear-gradient(180deg,#171d26,#12161d);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px;font-size:19px}
+.logo .cube{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#8f1f1f);display:grid;place-items:center;box-shadow:var(--sh);font-size:18px}
+.logo small{color:var(--muted);font-weight:600;font-size:11px;display:block;letter-spacing:1px}
+.hgrow{flex:1}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--bg3);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--accent);background:#252c36}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#b52a2a);border-color:transparent;color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:8px}
+.btn.danger:hover{border-color:var(--accent);color:var(--accent2)}
+.btn.on{border-color:var(--gold);background:#2a2416;color:var(--gold)}
+
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 14px;background:#12161d;border-bottom:1px solid var(--line);position:sticky;top:59px;z-index:40}
+.tab{padding:9px 15px;border-radius:10px 10px 0 0;cursor:pointer;color:var(--muted);font-weight:700;font-size:13px;border:1px solid transparent;border-bottom:none;transition:.15s}
+.tab:hover{color:var(--txt);background:#1a212b}
+.tab.active{color:#fff;background:var(--bg2);border-color:var(--line);position:relative}
+.tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent)}
+
+main{padding:20px;max-width:1440px;margin:0 auto}
+.panel{display:none;animation:fade .25s}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2.sec{font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:9px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--sh)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:820px){.g2,.g3{grid-template-columns:1fr}}
+label.f{display:block;margin:0 0 12px;font-size:13px;color:var(--muted);font-weight:600}
+label.f span{display:block;margin-bottom:5px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);padding:9px 11px;border-radius:9px;font-size:14px;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:90px}
+input[type=color]{padding:3px;height:40px;cursor:pointer}
+input[type=range]{padding:0;accent-color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.row>*{flex:1;min-width:110px}
+.pill{background:var(--bg3);border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:12px;color:var(--muted)}
+
+.board-wrap{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:16px;overflow:auto;min-height:120px}
+#board,#playBoard{margin:0 auto;position:relative}
+.tile{border-radius:8px;padding:5px;min-height:64px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;position:relative;font-size:11px;border:2px solid rgba(0,0,0,.25);transition:.12s;overflow:hidden;color:#101418}
+.tile:hover{transform:scale(1.05);z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.tile.sel{outline:3px solid var(--gold);outline-offset:1px;z-index:6}
+.tile .tnum{font-weight:800;opacity:.55;font-size:10px}
+.tile .ticon{font-size:20px;text-align:center;line-height:1}
+.tile .tlabel{font-weight:800;font-size:10.5px;line-height:1.15;word-break:break-word}
+.tile.hasimg .tlabel,.tile.hasimg .tnum,.tile.hasimg .ticon{text-shadow:0 1px 2px #000,0 0 4px #000}
+.tile.hasimg .tnum{color:#fff}
+.board-center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--txt);background:linear-gradient(135deg,#141a22,#1c2530);border:1px dashed var(--line);border-radius:12px;padding:10px}
+.board-center h3{margin:0;font-size:clamp(16px,3vw,30px);letter-spacing:1px}
+.board-center p{margin:6px 0 0;color:var(--muted);font-size:12px}
+.token{width:22px;height:22px;border-radius:50%;border:2px solid #fff;position:absolute;display:grid;place-items:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.6);transition:left .4s cubic-bezier(.34,1.4,.5,1),top .4s cubic-bezier(.34,1.4,.5,1);z-index:8}
+
+/* dungeon */
+.dcell{position:relative;display:grid;place-items:center;cursor:pointer;font-size:16px;line-height:1;user-select:none;border:1px solid rgba(0,0,0,.18)}
+/* hex handled by svg */
+.hexcell{cursor:pointer}
+/* free map */
+.region{position:absolute;border:2px solid rgba(0,0,0,.4);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:12px;cursor:grab;padding:4px;color:#101418;user-select:none;touch-action:none}
+.region.circle{border-radius:50%}
+.region.sel,.node.sel{outline:3px solid var(--gold);outline-offset:2px;z-index:9}
+.node{position:absolute;width:16px;height:16px;border-radius:50%;border:3px solid #fff;cursor:grab;touch-action:none;box-shadow:0 1px 4px rgba(0,0,0,.6);z-index:6}
+.node-lbl{position:absolute;font-size:11px;font-weight:700;color:var(--txt);pointer-events:none;white-space:nowrap;text-shadow:0 1px 3px #000;z-index:6}
+.tokenlayer{position:absolute;inset:0;pointer-events:none;z-index:20}
+.ftoken{position:absolute;width:30px;height:30px;border-radius:50%;border:2px solid #fff;display:grid;place-items:center;cursor:grab;pointer-events:auto;box-shadow:0 2px 6px rgba(0,0,0,.7);font-size:15px;touch-action:none;z-index:21}
+
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.legend .li{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.swatch{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.3)}
+.palette{display:flex;flex-wrap:wrap;gap:6px}
+.pbtn{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:5px}
+.pbtn.sel{border-color:var(--gold);background:#2a2416}
+.pbtn .pl{font-size:10px;color:var(--muted)}
+
+.deck-list{display:flex;flex-direction:column;gap:8px}
+.deck-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg3);cursor:pointer}
+.deck-item.active{border-color:var(--accent);background:#26202a}
+.deck-item .dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.deck-item .dn{flex:1;font-weight:700;font-size:13px}
+.deck-item .dc{font-size:11px;color:var(--muted)}
+.gamecard{border-radius:12px;padding:12px;min-height:150px;display:flex;flex-direction:column;background:linear-gradient(160deg,#fff,#eef1f5);color:#15181d;position:relative;border:1px solid rgba(0,0,0,.15);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.gamecard .gc-head{font-weight:800;font-size:14px;border-bottom:2px solid;padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.gamecard .gc-tag{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-top:6px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.card-mini-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:.15s}
+.gamecard:hover .card-mini-actions{opacity:1}
+.icard-btn{background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px}
+
+.piece-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.piece-card{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:var(--bg3);position:relative}
+.piece-token{width:46px;height:46px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;font-size:24px;border:3px solid #fff;box-shadow:var(--sh)}
+.shape-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.shape-opt{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:grid;place-items:center;font-size:16px}
+.shape-opt.sel{border-color:var(--accent);background:#2a2028}
+
+.dice-area{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;min-height:80px}
+.die{width:56px;height:56px;border-radius:12px;background:linear-gradient(160deg,#fafafa,#dfe3e8);color:#15181d;display:grid;place-items:center;font-size:28px;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.5);border:1px solid rgba(0,0,0,.2)}
+.die.rolling{animation:shake .5s}
+@keyframes shake{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-8px) rotate(-12deg)}50%{transform:translateY(4px) rotate(9deg)}75%{transform:translateY(-4px) rotate(-6deg)}}
+
+.play-layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media(max-width:1000px){.play-layout{grid-template-columns:1fr}}
+.player-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg3);margin-bottom:6px}
+.player-chip.turn{border-color:var(--gold);background:#251f14;box-shadow:0 0 0 1px var(--gold)}
+.player-chip .pt{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff;font-size:13px}
+.player-chip .pn{flex:1;font-weight:700;font-size:13px}
+.player-chip .pp{font-size:11px;color:var(--muted)}
+#log{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;height:200px;overflow:auto;font-size:12.5px}
+#log .lg{padding:4px 0;border-bottom:1px solid #1b212a}
+#log .lg b{color:var(--gold)}
+
+.empty{color:var(--muted);text-align:center;padding:30px;font-size:14px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#222b36;border:1px solid var(--accent);padding:11px 18px;border-radius:12px;box-shadow:var(--sh);z-index:200;font-size:14px;font-weight:600;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1;bottom:34px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:150;padding:20px}
+.modal.show{display:grid}
+.modal-box{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:520px;width:100%;box-shadow:var(--sh);max-height:85vh;overflow:auto}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.tpl-group{margin-bottom:10px}
+.tpl-group h4{margin:0 0 6px;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:1px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
+
+/* responsive + landscape + fullscreen board */
+nav.tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav.tabs::-webkit-scrollbar{height:0}
+.tab{white-space:nowrap;flex:0 0 auto}
+#playWrap{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;height:56vh;transition:height .2s}
+#playWrap.fs{position:fixed;inset:0;z-index:400;height:100vh!important;width:100vw;border-radius:0;padding:8px}
+#playBoard{transition:transform .15s ease-out}
+.fsClose,.fsHint{display:none}
+#playWrap.fs .fsClose{display:inline-flex;position:absolute;top:10px;right:10px;z-index:5}
+#playWrap.fs .fsHint{display:none}
+@media (orientation:landscape) and (max-width:1200px){
+  header{padding:7px 12px}
+  .logo{font-size:16px}.logo small{display:none}
+  #playWrap{height:82vh}
+  .play-layout{grid-template-columns:1fr 250px}
+  .fsHint{display:block}
+}
+@media (max-width:560px){
+  main{padding:12px}
+  header .hbtns .btn span,.hbtns{gap:5px}
+  h2.sec{font-size:16px}
+}
+.rotate-tip{display:none;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);margin-top:10px}
+@media (orientation:portrait) and (max-width:820px){ #p-play .rotate-tip{display:flex} }
+@keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.winbanner{animation:pop .4s ease-out}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="cube">🎲</div><div>ΕΠΙΤΡΑΠΕΖΙΟ <small>STUDIO · Δημιουργία Επιτραπέζιων</small></div></div>
+  <div class="hgrow"></div>
+  <div class="hbtns">
+    <button class="btn ghost sm" onclick="newGame()">🆕 Νέο</button>
+    <button class="btn ghost sm" onclick="openLibrary()">📚 Βιβλιοθήκη</button>
+    <button class="btn ghost sm" onclick="exportJSON()">⬇️ Εξαγωγή</button>
+    <button class="btn ghost sm" onclick="importJSON()">⬆️ Εισαγωγή</button>
+    <button class="btn primary sm" onclick="saveGame()">💾 Αποθήκευση</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <div class="tab active" data-tab="project">📋 Έργο</div>
+  <div class="tab" data-tab="board">🗺️ Ταμπλό</div>
+  <div class="tab" data-tab="cards">🃏 Κάρτες</div>
+  <div class="tab" data-tab="pieces">♟️ Πιόνια & Ζάρια</div>
+  <div class="tab" data-tab="rules">📖 Κανόνες</div>
+  <div class="tab" data-tab="play">▶️ Παίξε!</div>
+  <div class="tab" data-tab="print">🖨️ Εκτύπωση</div>
+</nav>
+
+<main>
+
+<!-- PROJECT -->
+<section class="panel active" id="p-project">
+  <h2 class="sec">📋 Στοιχεία Παιχνιδιού</h2>
+  <p class="sub">Ξεκίνα ορίζοντας τα βασικά. Όλα αποθηκεύονται αυτόματα στον browser σου.</p>
+  <div class="grid g2">
+    <div class="card">
+      <label class="f"><span>Τίτλος παιχνιδιού</span><input id="m-title" oninput="M('title',this.value)" placeholder="π.χ. Ο Θησαυρός του Αιγαίου"></label>
+      <label class="f"><span>Δημιουργός</span><input id="m-author" oninput="M('author',this.value)" placeholder="Το όνομά σου"></label>
+      <div class="row">
+        <label class="f"><span>Ελάχ. παίκτες</span><input type="number" id="m-pmin" min="1" max="12" oninput="M('pmin',+this.value)"></label>
+        <label class="f"><span>Μέγ. παίκτες</span><input type="number" id="m-pmax" min="1" max="12" oninput="M('pmax',+this.value)"></label>
+        <label class="f"><span>Ηλικία +</span><input type="number" id="m-age" min="3" max="99" oninput="M('age',+this.value)"></label>
+      </div>
+      <label class="f"><span>Διάρκεια (λεπτά)</span><input id="m-time" oninput="M('time',this.value)" placeholder="π.χ. 30–45"></label>
+    </div>
+    <div class="card">
+      <label class="f"><span>Σύντομη περιγραφή / Θέμα</span><textarea id="m-desc" oninput="M('desc',this.value)" placeholder="Τι είναι το παιχνίδι και πώς κερδίζεις;"></textarea></label>
+      <label class="f"><span>Στόχος νίκης</span><textarea id="m-goal" oninput="M('goal',this.value)" placeholder="π.χ. Ο πρώτος που θα φτάσει στο τέρμα / θα μαζέψει 10 πόντους..."></textarea></label>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2 class="sec" style="font-size:15px">🚀 Γρήγορη εκκίνηση από πρότυπο</h2>
+    <p class="sub" style="margin-bottom:12px">Φόρτωσε έτοιμη δομή και προσάρμοσέ την.</p>
+    <div class="tpl-group"><h4>Διαδρομής</h4><div class="row">
+      <button class="btn" onclick="loadTemplate('monopoly')">🏙️ Τύπου «Μονόπολη»</button>
+      <button class="btn" onclick="loadTemplate('snake')">🐍 «Φιδάκι & Σκάλες»</button>
+      <button class="btn" onclick="loadTemplate('trivia')">❓ «Trivia»</button>
+      <button class="btn" onclick="loadTemplate('race')">🏁 «Αγώνας»</button>
+    </div></div>
+    <div class="tpl-group"><h4>Σύνθετα / περίεργα ταμπλά</h4><div class="row">
+      <button class="btn" onclick="loadTemplate('catan')">⬡ Τύπου «Catan» (εξάγωνα)</button>
+      <button class="btn" onclick="loadTemplate('cluedo')">🕵️ Τύπου «Cluedo» (δωμάτια)</button>
+      <button class="btn" onclick="loadTemplate('train')">🚂 «Σιδηρόδρομος» (πόλεις/διαδρομές)</button>
+      <button class="btn" onclick="loadTemplate('heroquest')">🏰 «Μπουντρούμι» (HeroQuest)</button>
+      <button class="btn" onclick="loadTemplate('war')">⚔️ «Στρατηγικής» (περιοχές)</button>
+    </div></div>
+    <div class="tpl-group"><h4>Κλασικά επιτραπέζια</h4><div class="row">
+      <button class="btn" onclick="loadTemplate('life')">👶 «Η Ζωή» (Game of Life)</button>
+      <button class="btn" onclick="loadTemplate('goose')">🦢 «Το Παιχνίδι της Χήνας»</button>
+      <button class="btn" onclick="loadTemplate('trivialp')">🥧 «Trivial» (τροχός γνώσεων)</button>
+      <button class="btn" onclick="loadTemplate('scrabble')">🔤 «Σκραμπλ» (πλέγμα λέξεων)</button>
+      <button class="btn" onclick="loadTemplate('battleship')">🚢 «Ναυμαχία»</button>
+      <button class="btn" onclick="loadTemplate('pandemic')">🦠 «Πανδημία» (παγκόσμιος χάρτης)</button>
+    </div></div>
+  </div>
+</section>
+
+<!-- BOARD -->
+<section class="panel" id="p-board">
+  <h2 class="sec">🗺️ Σχεδιαστής Ταμπλό</h2>
+  <p class="sub">Διάλεξε τύπο ταμπλό και σχεδίασέ το. Κάθε τύπος έχει τα δικά του εργαλεία.</p>
+  <div class="grid" style="grid-template-columns:320px 1fr;gap:16px">
+    <div class="card" style="height:fit-content">
+      <label class="f"><span>Τύπος ταμπλό</span>
+        <select id="b-mode" onchange="setMode(this.value)">
+          <option value="loop">🔁 Διαδρομή γύρω-γύρω (Μονόπολη)</option>
+          <option value="snake">🐍 Φιδάκι (ζιγκ-ζαγκ)</option>
+          <option value="grid">▦ Απλό πλέγμα</option>
+          <option value="hex">⬡ Εξαγωνικό (Catan)</option>
+          <option value="free">🗺️ Ελεύθερος χάρτης/δίκτυο (Cluedo/Τρένα)</option>
+          <option value="dungeon">🏰 Μπουντρούμι/πλακίδια (HeroQuest)</option>
+        </select>
+      </label>
+
+      <!-- PATH controls -->
+      <div id="ctl-path">
+        <div class="row">
+          <label class="f"><span>Γραμμές</span><input type="number" id="b-rows" min="2" max="16" value="7" oninput="setSize()"></label>
+          <label class="f"><span>Στήλες</span><input type="number" id="b-cols" min="2" max="16" value="7" oninput="setSize()"></label>
+        </div>
+        <label class="f"><span>Χρώμα κέντρου</span><input type="color" id="b-bg" value="#141a22" oninput="G.board.bg=this.value;renderBoard()"></label>
+        <p class="pill" id="b-count">— πλακίδια</p>
+        <hr style="border-color:var(--line);margin:14px 0">
+        <h2 class="sec" style="font-size:14px">🪜 Συνδέσεις (σκάλες/φιδάκια)</h2>
+        <div class="row">
+          <label class="f"><span>Από #</span><input type="number" id="cn-from" min="1"></label>
+          <label class="f"><span>Προς #</span><input type="number" id="cn-to" min="1"></label>
+          <button class="btn sm" style="flex:0" onclick="addConn()">➕</button>
+        </div>
+        <div id="connList"></div>
+      </div>
+
+      <!-- HEX controls -->
+      <div id="ctl-hex" class="hidden">
+        <label class="f"><span>Σχήμα</span>
+          <select id="hx-shape" onchange="hexShape(this.value)">
+            <option value="island">Νησί (εξαγωνικό)</option>
+            <option value="rect">Ορθογώνιο</option>
+          </select>
+        </label>
+        <div id="hx-island">
+          <label class="f"><span>Μέγεθος νησιού</span>
+            <select id="hx-preset" onchange="G.board.hex.preset=this.value;renderBoard()">
+              <option value="small">Μικρό (7)</option>
+              <option value="catan">Catan (19)</option>
+              <option value="big">Μεγάλο (37)</option>
+            </select>
+          </label>
+        </div>
+        <div id="hx-rect" class="hidden">
+          <div class="row">
+            <label class="f"><span>Γραμμές</span><input type="number" id="hx-rows" min="2" max="12" value="5" oninput="G.board.hex.rows=+this.value;renderBoard()"></label>
+            <label class="f"><span>Στήλες</span><input type="number" id="hx-cols" min="2" max="12" value="5" oninput="G.board.hex.cols=+this.value;renderBoard()"></label>
+          </div>
+        </div>
+        <p class="hint">Κλικ σε εξάγωνο για πόρο, αριθμό & λιμάνι.</p>
+      </div>
+
+      <!-- FREE controls -->
+      <div id="ctl-free" class="hidden">
+        <div class="row" style="flex-direction:column;gap:6px">
+          <button class="btn sm" onclick="addRegion()">➕ Δωμάτιο / Περιοχή</button>
+          <button class="btn sm" onclick="addNode()">📍 Πόλη / Κόμβος</button>
+          <button class="btn sm" id="linkBtn" onclick="toggleLinkMode()">🔗 Λειτουργία σύνδεσης</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn sm" onclick="uploadFreeImg()">🖼️ Υπόβαθρο (χάρτης)</button>
+          <button class="btn sm danger" onclick="removeFreeImg()">🗑️</button>
+        </div>
+        <div class="row">
+          <label class="f"><span>Πλάτος καμβά</span><input type="number" id="fr-w" min="200" max="2000" oninput="G.board.free.w=+this.value;renderBoard()"></label>
+          <label class="f"><span>Ύψος καμβά</span><input type="number" id="fr-h" min="200" max="2000" oninput="G.board.free.h=+this.value;renderBoard()"></label>
+        </div>
+        <p class="hint">Ανέβασε δικό σου χάρτη ως υπόβαθρο και βάλε από πάνω περιοχές/κόμβους. Σύρε τα στοιχεία για μετακίνηση· στη «λειτουργία σύνδεσης» κλικ σε δύο στοιχεία για να τα ενώσεις.</p>
+        <hr style="border-color:var(--line);margin:12px 0">
+        <h2 class="sec" style="font-size:14px">🔗 Συνδέσεις</h2>
+        <div id="linkList"></div>
+      </div>
+
+      <!-- DUNGEON controls -->
+      <div id="ctl-dungeon" class="hidden">
+        <div class="row">
+          <label class="f"><span>Γραμμές</span><input type="number" id="dg-rows" min="4" max="30" value="13" oninput="G.board.dungeon.rows=+this.value;renderBoard()"></label>
+          <label class="f"><span>Στήλες</span><input type="number" id="dg-cols" min="4" max="34" value="19" oninput="G.board.dungeon.cols=+this.value;renderBoard()"></label>
+        </div>
+        <h2 class="sec" style="font-size:14px">🖌️ Εδάφη</h2>
+        <div class="palette" id="terrainPal"></div>
+        <h2 class="sec" style="font-size:14px;margin-top:10px">🧩 Αντικείμενα</h2>
+        <div class="palette" id="iconPal"></div>
+        <p class="hint">Διάλεξε πινέλο και ζωγράφισε με κλικ ή σύρσιμο πάνω στο ταμπλό.</p>
+      </div>
+
+      <hr style="border-color:var(--line);margin:14px 0">
+      <div id="editorBox" class="empty">Επίλεξε στοιχείο για επεξεργασία.</div>
+    </div>
+
+    <div>
+      <div class="board-wrap"><div id="board"></div></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CARDS -->
+<section class="panel" id="p-cards">
+  <h2 class="sec">🃏 Κάρτες & Τράπουλες</h2>
+  <p class="sub">Φτιάξε τράπουλες (π.χ. «Τύχη», «Ύποπτοι», «Προορισμοί») και γέμισέ τες.</p>
+  <div class="grid" style="grid-template-columns:260px 1fr;gap:16px">
+    <div class="card" style="height:fit-content">
+      <button class="btn primary" style="width:100%" onclick="addDeck()">➕ Νέα τράπουλα</button>
+      <div class="deck-list" id="deckList" style="margin-top:12px"></div>
+    </div>
+    <div><div id="deckHeader"></div><div class="cards-grid" id="cardsGrid" style="margin-top:14px"></div></div>
+  </div>
+</section>
+
+<!-- PIECES & DICE -->
+<section class="panel" id="p-pieces">
+  <div class="grid g2">
+    <div>
+      <h2 class="sec">♟️ Πιόνια</h2>
+      <p class="sub">Δημιούργησε τα πιόνια των παικτών.</p>
+      <button class="btn primary" onclick="addPiece()">➕ Νέο πιόνι</button>
+      <div class="piece-grid" id="pieceGrid" style="margin-top:14px"></div>
+    </div>
+    <div>
+      <h2 class="sec">🎲 Ζάρια</h2>
+      <p class="sub">Ρύθμισε και δοκίμασε τα ζάρια.</p>
+      <div class="card">
+        <div class="row">
+          <label class="f"><span>Πλήθος ζαριών</span><input type="number" id="d-count" min="1" max="6" value="1" oninput="G.dice.count=+this.value;save()"></label>
+          <label class="f"><span>Πλευρές</span>
+            <select id="d-sides" onchange="G.dice.sides=+this.value;save()"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>12</option><option>20</option></select>
+          </label>
+        </div>
+        <div class="dice-area" id="diceArea" style="margin:16px 0"><span class="hint">Πάτα «Ρίξε»</span></div>
+        <button class="btn primary" style="width:100%" onclick="rollTest()">🎲 Ρίξε ζάρια</button>
+        <p class="hint" id="diceResult"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RULES -->
+<section class="panel" id="p-rules">
+  <h2 class="sec">📖 Κανόνες Παιχνιδιού</h2>
+  <p class="sub">Γράψε τους κανόνες. Κενές γραμμές = παράγραφοι.</p>
+  <div class="grid g2">
+    <div class="card">
+      <label class="f"><span>Προετοιμασία</span><textarea id="r-setup" style="min-height:120px" oninput="G.rules.setup=this.value;save()"></textarea></label>
+      <label class="f"><span>Πώς παίζεται (γύρος παίκτη)</span><textarea id="r-play" style="min-height:150px" oninput="G.rules.play=this.value;save()"></textarea></label>
+    </div>
+    <div class="card">
+      <label class="f"><span>Ειδικοί κανόνες / εξαιρέσεις</span><textarea id="r-special" style="min-height:120px" oninput="G.rules.special=this.value;save()"></textarea></label>
+      <label class="f"><span>Πώς κερδίζεις</span><textarea id="r-win" style="min-height:150px" oninput="G.rules.win=this.value;save()"></textarea></label>
+    </div>
+  </div>
+</section>
+
+<!-- PLAY -->
+<section class="panel" id="p-play">
+  <h2 class="sec">▶️ Λειτουργία Παιξίματος</h2>
+  <p class="sub">Δοκίμασε το παιχνίδι σου με πραγματικούς παίκτες.</p>
+  <div class="play-layout">
+    <div>
+      <div class="board-wrap" id="playWrap"><div id="playBoard"></div><button class="btn fsClose" onclick="toggleFsPlay()">✕ Κλείσιμο</button></div>
+      <div class="toolbar" style="margin-top:14px;justify-content:center">
+        <button class="btn primary" id="rollBtn" onclick="playRoll()" style="font-size:16px;padding:12px 28px">🎲 Ρίξε!</button>
+        <button class="btn" onclick="setupPlay()">🔄 Επανεκκίνηση</button>
+        <button class="btn" onclick="toggleFsPlay()" title="Πλήρης οθόνη">⛶ Πλήρης οθόνη</button>
+        <label class="pill" style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="freeMoveChk" style="width:auto" onchange="play.freeMode=this.checked;renderPlay()"> Ελεύθερη κίνηση (σύρε πιόνια)</label>
+      </div>
+      <div class="dice-area" id="playDice" style="margin-top:10px"></div>
+      <div class="rotate-tip">📱 Γύρνα τη συσκευή <b>οριζόντια</b> ή πάτα <b>⛶ Πλήρης οθόνη</b> για μεγαλύτερο ταμπλό.</div>
+    </div>
+    <div>
+      <div class="card">
+        <h2 class="sec" style="font-size:15px">👥 Παίκτες</h2>
+        <div id="playersList"></div>
+        <div class="row" style="margin-top:8px"><input id="np-name" placeholder="Όνομα παίκτη"><button class="btn sm" style="flex:0" onclick="addPlayer()">➕</button></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2 class="sec" style="font-size:15px">🃏 Τράβα κάρτα</h2>
+        <div id="drawBtns" class="row" style="flex-direction:column"></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2 class="sec" style="font-size:15px">📜 Ιστορικό</h2>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRINT -->
+<section class="panel" id="p-print">
+  <h2 class="sec">🖨️ Εκτύπωση & Εξαγωγή</h2>
+  <p class="sub">Τύπωσε τα υλικά για να παίξεις στο τραπέζι, ή εξάγαγε το παιχνίδι.</p>
+  <div class="grid g3">
+    <div class="card"><h2 class="sec" style="font-size:15px">🗺️ Ταμπλό</h2><p class="sub">Εκτύπωση ή εξαγωγή εικόνας για τυπογραφείο.</p><button class="btn primary" style="width:100%;margin-bottom:8px" onclick="printBoard()">🖨️ Εκτύπωση ταμπλό</button><button class="btn" style="width:100%" onclick="exportPNG()">🖼️ Εξαγωγή σε PNG (υψηλή ανάλυση)</button></div>
+    <div class="card"><h2 class="sec" style="font-size:15px">🃏 Κάρτες</h2><p class="sub">Φύλλα καρτών έτοιμα για κόψιμο.</p><button class="btn primary" style="width:100%;margin-bottom:8px" onclick="printCards()">🖨️ Εκτύπωση καρτών</button><button class="btn" style="width:100%" onclick="exportCardsPNG()">🖼️ Κάρτες σε PNG (φύλλο κοπής)</button></div>
+    <div class="card"><h2 class="sec" style="font-size:15px">📖 Κανόνες</h2><p class="sub">Φυλλάδιο οδηγιών.</p><button class="btn primary" style="width:100%" onclick="printRules()">Εκτύπωση κανόνων</button></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2 class="sec" style="font-size:15px">💾 Αρχείο παιχνιδιού (.json)</h2>
+    <p class="sub">Κράτα αντίγραφο ή μοιράσου το — φορτώνεται πίσω στο Studio.</p>
+    <div class="row"><button class="btn" onclick="exportJSON()">⬇️ Εξαγωγή σε αρχείο</button><button class="btn" onclick="importJSON()">⬆️ Εισαγωγή από αρχείο</button></div>
+  </div>
+</section>
+
+</main>
+<footer>ΕΠΙΤΡΑΠΕΖΙΟ Studio — offline εργαλείο δημιουργίας επιτραπέζιων παιχνιδιών · όλα αποθηκεύονται τοπικά</footer>
+
+<div class="modal" id="libModal"><div class="modal-box"><h3>📚 Βιβλιοθήκη παιχνιδιών</h3><div id="libList"></div><div style="text-align:right;margin-top:14px"><button class="btn" onclick="closeModal('libModal')">Κλείσιμο</button></div></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileIn" accept=".json" class="hidden">
+<input type="file" id="imgIn" accept="image/*" class="hidden">
+<input type="file" id="imgPick" accept="image/*" class="hidden">
+<div class="modal" id="cardModal"><div class="modal-box" id="cardModalBox" style="max-width:300px" onclick="event.stopPropagation()"></div></div>
+
+<script>
+/* ============ CONSTANTS ============ */
+const TYPES={
+  start:{label:'Αφετηρία',icon:'🏁',color:'#8ce99a'}, normal:{label:'Κανονικό',icon:'',color:'#c7d0dc'},
+  chance:{label:'Τύχη',icon:'❓',color:'#ffd43b'}, event:{label:'Γεγονός',icon:'⚡',color:'#74c0fc'},
+  bonus:{label:'Μπόνους',icon:'⭐',color:'#b197fc'}, penalty:{label:'Ποινή',icon:'💥',color:'#ffa8a8'},
+  jail:{label:'Φυλακή',icon:'🔒',color:'#ced4da'}, skip:{label:'Χάσε σειρά',icon:'⏭️',color:'#ffc078'}, finish:{label:'Τέρμα',icon:'🏆',color:'#ffe066'}
+};
+const SHAPES=['🔴','🔵','🟢','🟡','🟣','🟠','⚫','⚪','🐎','🚗','🐶','🐱','👑','🚀','⛵','🎩','🐢','🦊','🧙','⚔️','🏰','🚂'];
+const RES={
+  wood:{label:'Ξυλεία',icon:'🌲',color:'#4f7a3a'}, brick:{label:'Τούβλα',icon:'🧱',color:'#c1502e'},
+  sheep:{label:'Πρόβατα',icon:'🐑',color:'#a3c76d'}, wheat:{label:'Σιτάρι',icon:'🌾',color:'#e3b23c'},
+  ore:{label:'Ορυκτά',icon:'⛰️',color:'#8a94a3'}, desert:{label:'Έρημος',icon:'🏜️',color:'#d8c79a'},
+  sea:{label:'Θάλασσα',icon:'🌊',color:'#3b6ea5'}, gold:{label:'Χρυσός',icon:'💰',color:'#e5b567'}
+};
+const ISLAND={small:[2,3,2],catan:[3,4,5,4,3],big:[3,4,5,6,5,4,3]};
+const HEX=34, HPAD=10;
+const DT={
+  floor:{label:'Δάπεδο',color:'#cdbb8e'}, wall:{label:'Τοίχος',color:'#241f1b'}, room:{label:'Δωμάτιο',color:'#b9a06a'},
+  water:{label:'Νερό',color:'#3a6a9c'}, lava:{label:'Λάβα',color:'#b5442e'}, pit:{label:'Χάσμα',color:'#14100c'},
+  stairs:{label:'Σκάλες',color:'#8a8f98'}, path:{label:'Μονοπάτι',color:'#9c8a5f'}
+};
+const DICONS=['🚪','👹','💀','🐉','🕷️','🧙','⚔️','🛡️','🏹','💰','🗝️','🪤','🔥','📦','🪑','⬆️','⬇️','🐀','🦇','☠️','🧟'];
+
+/* ============ STATE ============ */
+function freshGame(){return{
+  id:'g_'+Date.now(),
+  meta:{title:'',author:'',pmin:2,pmax:4,age:6,time:'30',desc:'',goal:''},
+  board:{mode:'loop',rows:7,cols:7,bg:'#141a22',tiles:{},conns:[]},
+  decks:[],pieces:[],dice:{count:1,sides:6},rules:{setup:'',play:'',special:'',win:''}
+};}
+let G=freshGame();
+let selTile=null,selDeck=null,selHex=null,selFree=null,linkMode=false,linkFrom=null;
+let dBrush={kind:'terrain',value:'wall'};
+let painting=false;
+let play=null;
+let playScale=1;
+
+/* ============ PERSIST ============ */
+const LS_CUR='epitrapezio_current',LS_LIB='epitrapezio_lib';
+function save(){try{localStorage.setItem(LS_CUR,JSON.stringify(G))}catch(e){}}
+function loadCurrent(){try{const s=localStorage.getItem(LS_CUR);if(s){G=Object.assign(freshGame(),JSON.parse(s));ensureBoard();}}catch(e){}}
+function ensureBoard(){const b=G.board;if(!b.tiles)b.tiles={};if(!b.conns)b.conns=[];}
+function getLib(){try{return JSON.parse(localStorage.getItem(LS_LIB)||'{}')}catch(e){return{}}}
+function setLib(l){localStorage.setItem(LS_LIB,JSON.stringify(l))}
+function saveGame(){if(!G.meta.title){G.meta.title='Ανώνυμο παιχνίδι';document.getElementById('m-title').value=G.meta.title;}const lib=getLib();lib[G.id]={title:G.meta.title,updated:Date.now(),data:G};setLib(lib);save();toast('💾 Αποθηκεύτηκε στη βιβλιοθήκη');}
+function newGame(){if(!confirm('Νέο παιχνίδι; Οι μη αποθηκευμένες αλλαγές θα χαθούν.'))return;G=freshGame();resetSel();play=null;save();refreshAll();toast('🆕 Νέο παιχνίδι');}
+function resetSel(){selTile=selHex=selFree=null;selDeck=null;linkFrom=null;linkMode=false;}
+
+/* ============ UTIL ============ */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function M(k,v){G.meta[k]=v;save();}
+function uid(p){return p+Math.random().toString(36).slice(2,8);}
+function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function contrast(hex){if(!hex)return'#101418';const c=hex.replace('#','');const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);return(r*299+g*587+b*114)/1000>140?'#101418':'#fff';}
+
+/* ============ TABS ============ */
+document.getElementById('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');const id=t.dataset.tab;document.getElementById('p-'+id).classList.add('active');
+  if(id==='board')renderBoard();
+  if(id==='cards')renderDecks();
+  if(id==='pieces')renderPieces();
+  if(id==='play'){if(!play)setupPlay();else renderPlay();}
+});
+function goTab(id){document.querySelector('.tab[data-tab="'+id+'"]').click();}
+
+/* ============ PATH BOARD (loop/snake/grid) ============ */
+function tileCount(){const{mode,rows,cols}=G.board;if(mode==='loop')return Math.max(4,2*cols+2*rows-4);return rows*cols;}
+function tilePositions(){const{mode,rows,cols}=G.board;const out=[];let i=0;
+  if(mode==='loop'){for(let c=1;c<=cols;c++)out.push({index:i++,r:1,c});for(let r=2;r<=rows;r++)out.push({index:i++,r,c:cols});for(let c=cols-1;c>=1;c--)out.push({index:i++,r:rows,c});for(let r=rows-1;r>=2;r--)out.push({index:i++,r,c:1});}
+  else if(mode==='snake'){for(let rr=0;rr<rows;rr++){const gr=rows-rr;if(rr%2===0)for(let c=1;c<=cols;c++)out.push({index:i++,r:gr,c});else for(let c=cols;c>=1;c--)out.push({index:i++,r:gr,c});}}
+  else{for(let r=1;r<=rows;r++)for(let c=1;c<=cols;c++)out.push({index:i++,r,c});}
+  return out;}
+function tileData(i){const d=G.board.tiles[i]||{};let type=d.type;if(type===undefined){const n=tileCount();if(i===0)type='start';else if(i===n-1&&G.board.mode!=='loop')type='finish';else type='normal';}return{type,label:d.label||'',color:d.color||'',note:d.note||'',img:d.img||''};}
+function buildBoardInto(container,editable){
+  const{rows,cols}=G.board;container.innerHTML='';
+  Object.assign(container.style,{display:'grid',gap:'5px',margin:'0 auto',width:'fit-content',position:'relative',height:'auto',background:'none'});
+  container.style.gridTemplateColumns='repeat('+cols+',minmax(56px,72px))';
+  container.style.gridTemplateRows='repeat('+rows+',minmax(56px,72px))';
+  const positions=tilePositions();
+  positions.forEach(p=>{const td=tileData(p.index);const t=TYPES[td.type]||TYPES.normal;const el=document.createElement('div');
+    el.className='tile'+(editable&&selTile===p.index?' sel':'')+(td.img?' hasimg':'');const bg=td.color||t.color;el.style.background=bg;el.style.color=contrast(bg);
+    if(td.img){el.style.backgroundImage='url('+td.img+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.style.color='#fff';}
+    el.style.gridRow=p.r;el.style.gridColumn=p.c;
+    el.innerHTML='<div class="tnum">'+(p.index+1)+'</div>'+(t.icon?'<div class="ticon">'+t.icon+'</div>':'')+'<div class="tlabel">'+esc(td.label||(td.type!=='normal'?t.label:''))+'</div>';
+    if(editable)el.onclick=()=>selectTile(p.index);container.appendChild(el);});
+  if(G.board.mode==='loop'&&cols>2&&rows>2){const ctr=document.createElement('div');ctr.className='board-center';ctr.style.gridRow='2 / '+rows;ctr.style.gridColumn='2 / '+cols;ctr.style.background=G.board.bg;ctr.innerHTML='<h3>'+esc(G.meta.title||'ΤΟ ΠΑΙΧΝΙΔΙ ΣΟΥ')+'</h3><p>'+esc(G.meta.desc||'Σχεδίασε το ταμπλό σου')+'</p>';container.appendChild(ctr);}
+  return positions;
+}
+function selectTile(i){selTile=i;renderBoard();const td=tileData(i);const ed=document.getElementById('editorBox');ed.className='';
+  ed.innerHTML='<h2 class="sec" style="font-size:14px">✏️ Πλακίδιο #'+(i+1)+'</h2>'+
+    '<label class="f"><span>Τύπος</span><select onchange="updTile(\'type\',this.value)">'+Object.keys(TYPES).map(k=>'<option value="'+k+'" '+(td.type===k?'selected':'')+'>'+TYPES[k].icon+' '+TYPES[k].label+'</option>').join('')+'</select></label>'+
+    '<label class="f"><span>Ετικέτα</span><input value="'+esc(td.label)+'" oninput="updTile(\'label\',this.value)" placeholder="π.χ. Πλατεία Συντάγματος"></label>'+
+    '<label class="f"><span>Χρώμα</span><input type="color" value="'+(td.color||TYPES[td.type].color)+'" oninput="updTile(\'color\',this.value)"></label>'+
+    '<label class="f"><span>Εικόνα πλακιδίου</span><div class="row">'+(td.img?'<img src="'+td.img+'" style="width:46px;height:46px;object-fit:cover;border-radius:6px;flex:0">':'')+'<button class="btn sm" onclick="tileImg('+i+')">🖼️ '+(td.img?'Αλλαγή':'Προσθήκη')+'</button>'+(td.img?'<button class="btn sm danger" style="flex:0" onclick="tileImgRemove('+i+')">🗑️</button>':'')+'</div></label>'+
+    '<label class="f"><span>Οδηγία όταν σταματάς εδώ</span><textarea oninput="updTile(\'note\',this.value)" placeholder="π.χ. Πλήρωσε 200€">'+esc(td.note)+'</textarea></label>'+
+    '<button class="btn sm danger" onclick="resetTile('+i+')">↩︎ Επαναφορά</button>';}
+function updTile(k,v){if(selTile===null)return;const d=G.board.tiles[selTile]||{};d[k]=v;G.board.tiles[selTile]=d;save();renderBoard();}
+function resetTile(i){delete G.board.tiles[i];save();selectTile(i);}
+function addConn(){const f=+document.getElementById('cn-from').value,t=+document.getElementById('cn-to').value,n=tileCount();if(!f||!t||f<1||t<1||f>n||t>n||f===t){toast('⚠️ Μη έγκυρα νούμερα');return;}G.board.conns.push({from:f-1,to:t-1});save();renderConns();document.getElementById('cn-from').value='';document.getElementById('cn-to').value='';}
+function renderConns(){const c=document.getElementById('connList');const cs=G.board.conns||[];if(!cs.length){c.innerHTML='<p class="hint">Καμία σύνδεση. (π.χ. 3→22 σκάλα, 30→12 φιδάκι)</p>';return;}c.innerHTML=cs.map((x,i)=>{const up=x.to>x.from;return'<div class="deck-item" style="cursor:default"><span>'+(up?'🪜':'🐍')+'</span><span class="dn">#'+(x.from+1)+' → #'+(x.to+1)+'</span><button class="icard-btn" onclick="delConn('+i+')">✕</button></div>';}).join('');}
+function delConn(i){G.board.conns.splice(i,1);save();renderConns();}
+
+/* ============ HEX BOARD (Catan) ============ */
+function getHexCells(){const h=G.board.hex;const rowLens=h.shape==='rect'?Array(h.rows).fill(h.cols):(ISLAND[h.preset]||ISLAND.catan);
+  const maxLen=Math.max(...rowLens);const size=HEX,w=Math.sqrt(3)*size,v=1.5*size;const cells=[];
+  rowLens.forEach((len,r)=>{const offX=h.shape==='rect'?(r%2?w/2:0):(maxLen-len)*w/2;for(let c=0;c<len;c++){cells.push({key:r+'_'+c,r,c,cx:offX+c*w+w/2+HPAD,cy:r*v+size+HPAD});}});
+  const width=Math.max(...cells.map(c=>c.cx))+w/2+HPAD;const height=Math.max(...cells.map(c=>c.cy))+size+HPAD;return{cells,size,w,v,width,height};}
+function hexPoints(cx,cy,s){let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-90);p.push((cx+s*Math.cos(a)).toFixed(1)+','+(cy+s*Math.sin(a)).toFixed(1));}return p.join(' ');}
+function hexSVG(editable){const g=getHexCells();let s='<svg viewBox="0 0 '+g.width+' '+g.height+'" width="'+g.width+'" height="'+g.height+'" style="max-width:100%" xmlns="http://www.w3.org/2000/svg">';
+  g.cells.forEach(cell=>{const d=G.board.hex.tiles[cell.key]||{};const res=RES[d.res||'sea'];const fill=d.color||res.color;const sel=editable&&selHex===cell.key;
+    s+='<g class="hexcell" data-key="'+cell.key+'">';
+    s+='<polygon points="'+hexPoints(cell.cx,cell.cy,g.size-1.5)+'" fill="'+fill+'" stroke="'+(sel?'#e5b567':'#0b0e12')+'" stroke-width="'+(sel?4:2)+'"/>';
+    s+='<text x="'+cell.cx+'" y="'+(cell.cy-4)+'" font-size="20" text-anchor="middle">'+res.icon+'</text>';
+    if(d.label)s+='<text x="'+cell.cx+'" y="'+(cell.cy+g.size-9)+'" font-size="9" text-anchor="middle" font-weight="bold" fill="'+contrast(fill)+'">'+esc(d.label)+'</text>';
+    if(d.num){s+='<circle cx="'+cell.cx+'" cy="'+(cell.cy+13)+'" r="12" fill="#f5f0e1" stroke="#333"/><text x="'+cell.cx+'" y="'+(cell.cy+17)+'" font-size="13" text-anchor="middle" font-weight="bold" fill="'+((d.num==6||d.num==8)?'#c0392b':'#222')+'">'+d.num+'</text>';}
+    if(d.port)s+='<text x="'+cell.cx+'" y="'+(cell.cy-g.size+18)+'" font-size="14" text-anchor="middle">⚓</text>';
+    s+='</g>';});
+  s+='</svg>';return s;}
+function buildHexBoard(container,editable){if(!G.board.hex)G.board.hex={shape:'island',preset:'catan',rows:5,cols:5,tiles:{}};
+  Object.assign(container.style,{display:'block',width:'fit-content',margin:'0 auto',position:'relative',height:'auto',background:'none',gridTemplateColumns:'',gridTemplateRows:''});
+  container.innerHTML=hexSVG(editable);
+  if(editable)container.querySelectorAll('g.hexcell').forEach(g=>g.onclick=()=>selectHex(g.dataset.key));}
+function selectHex(key){selHex=key;renderBoard();const d=G.board.hex.tiles[key]||{};const ed=document.getElementById('editorBox');ed.className='';
+  ed.innerHTML='<h2 class="sec" style="font-size:14px">⬡ Εξάγωνο</h2>'+
+    '<label class="f"><span>Πόρος</span><select onchange="updHex(\'res\',this.value)">'+Object.keys(RES).map(k=>'<option value="'+k+'" '+((d.res||'sea')===k?'selected':'')+'>'+RES[k].icon+' '+RES[k].label+'</option>').join('')+'</select></label>'+
+    '<label class="f"><span>Αριθμός ζαριού</span><select onchange="updHex(\'num\',this.value?+this.value:0)"><option value="">—</option>'+[2,3,4,5,6,8,9,10,11,12].map(n=>'<option '+(d.num==n?'selected':'')+'>'+n+'</option>').join('')+'</select></label>'+
+    '<label class="f"><span>Ετικέτα</span><input value="'+esc(d.label||'')+'" oninput="updHex(\'label\',this.value)"></label>'+
+    '<label class="f" style="display:flex;align-items:center;gap:8px"><input type="checkbox" style="width:auto" '+(d.port?'checked':'')+' onchange="updHex(\'port\',this.checked)"> ⚓ Λιμάνι</label>'+
+    '<button class="btn sm danger" onclick="resetHex()">↩︎ Καθαρισμός</button>';}
+function updHex(k,v){if(!selHex)return;const d=G.board.hex.tiles[selHex]||{};d[k]=v;G.board.hex.tiles[selHex]=d;save();renderBoard();}
+function resetHex(){if(!selHex)return;delete G.board.hex.tiles[selHex];save();selectHex(selHex);}
+function hexShape(v){G.board.hex.shape=v;document.getElementById('hx-island').classList.toggle('hidden',v!=='island');document.getElementById('hx-rect').classList.toggle('hidden',v!=='rect');save();renderBoard();}
+
+/* ============ FREE MAP (Cluedo / trains / weird) ============ */
+function ensureFree(){if(!G.board.free)G.board.free={w:900,h:620,regions:[],nodes:[],links:[]};const f=G.board.free;if(!f.regions)f.regions=[];if(!f.nodes)f.nodes=[];if(!f.links)f.links=[];}
+function freeItem(id){ensureFree();return G.board.free.regions.find(r=>r.id===id)||G.board.free.nodes.find(n=>n.id===id);}
+function itemCenter(it){return it.w!==undefined?{x:it.x+it.w/2,y:it.y+it.h/2}:{x:it.x,y:it.y};}
+function buildFreeBoard(container,editable){ensureFree();const f=G.board.free;
+  Object.assign(container.style,{display:'block',position:'relative',width:f.w+'px',height:f.h+'px',margin:'0 auto',backgroundColor:G.board.bg||'#141a22',borderRadius:'12px',gridTemplateColumns:'',gridTemplateRows:''});
+  if(f.img){container.style.backgroundImage='url('+f.img+')';container.style.backgroundSize='100% 100%';container.style.backgroundRepeat='no-repeat';}else{container.style.backgroundImage='none';}
+  let svg='<svg class="linklayer" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">';
+  f.links.forEach(l=>{const a=freeItem(l.a),b=freeItem(l.b);if(a&&b){const ca=itemCenter(a),cb=itemCenter(b);svg+='<line x1="'+ca.x+'" y1="'+ca.y+'" x2="'+cb.x+'" y2="'+cb.y+'" stroke="'+(l.color||'#9aa7b6')+'" stroke-width="5" stroke-linecap="round"/>';if(l.label){svg+='<rect x="'+((ca.x+cb.x)/2-11)+'" y="'+((ca.y+cb.y)/2-9)+'" width="22" height="18" rx="4" fill="#0e1116" stroke="'+(l.color||'#9aa7b6')+'"/><text x="'+((ca.x+cb.x)/2)+'" y="'+((ca.y+cb.y)/2+4)+'" font-size="11" fill="#fff" text-anchor="middle" font-weight="bold">'+esc(l.label)+'</text>';}}});
+  svg+='</svg>';container.innerHTML=svg;
+  f.regions.forEach(r=>{const el=document.createElement('div');el.className='region'+(r.shape==='circle'?' circle':'')+(editable&&selFree===r.id?' sel':'');el.style.left=r.x+'px';el.style.top=r.y+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';el.style.background=r.color;el.style.color=contrast(r.color);el.textContent=r.name;if(editable)dragFree(el,r,container);container.appendChild(el);});
+  f.nodes.forEach(n=>{const el=document.createElement('div');el.className='node'+(editable&&selFree===n.id?' sel':'');el.style.left=(n.x-8)+'px';el.style.top=(n.y-8)+'px';el.style.background=n.color;if(editable)dragFree(el,n,container,true);container.appendChild(el);const lbl=document.createElement('div');lbl.className='node-lbl';lbl.style.left=(n.x+11)+'px';lbl.style.top=(n.y-8)+'px';lbl.textContent=n.name;container.appendChild(lbl);});
+  return f;}
+function dragFree(el,obj,container,isNode){el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);const sx=e.clientX,sy=e.clientY,ox=obj.x,oy=obj.y;let moved=false;const f=G.board.free;
+  function mm(ev){const dx=ev.clientX-sx,dy=ev.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+    if(isNode){obj.x=Math.max(6,Math.min(f.w-6,ox+dx));obj.y=Math.max(6,Math.min(f.h-6,oy+dy));el.style.left=(obj.x-8)+'px';el.style.top=(obj.y-8)+'px';const lbl=el.nextSibling;if(lbl&&lbl.className==='node-lbl'){lbl.style.left=(obj.x+11)+'px';lbl.style.top=(obj.y-8)+'px';}}
+    else{obj.x=Math.max(0,Math.min(f.w-obj.w,ox+dx));obj.y=Math.max(0,Math.min(f.h-obj.h,oy+dy));el.style.left=obj.x+'px';el.style.top=obj.y+'px';}
+    updateFreeLinks(container);}
+  function mu(){el.removeEventListener('pointermove',mm);el.removeEventListener('pointerup',mu);if(!moved)freeClick(obj.id);else save();}
+  el.addEventListener('pointermove',mm);el.addEventListener('pointerup',mu);});}
+function updateFreeLinks(container){const f=G.board.free;const layer=container.querySelector('.linklayer');if(!layer)return;let svg='';f.links.forEach(l=>{const a=freeItem(l.a),b=freeItem(l.b);if(a&&b){const ca=itemCenter(a),cb=itemCenter(b);svg+='<line x1="'+ca.x+'" y1="'+ca.y+'" x2="'+cb.x+'" y2="'+cb.y+'" stroke="'+(l.color||'#9aa7b6')+'" stroke-width="5" stroke-linecap="round"/>';if(l.label){svg+='<rect x="'+((ca.x+cb.x)/2-11)+'" y="'+((ca.y+cb.y)/2-9)+'" width="22" height="18" rx="4" fill="#0e1116" stroke="'+(l.color||'#9aa7b6')+'"/><text x="'+((ca.x+cb.x)/2)+'" y="'+((ca.y+cb.y)/2+4)+'" font-size="11" fill="#fff" text-anchor="middle" font-weight="bold">'+esc(l.label)+'</text>';}}});layer.innerHTML=svg;}
+function freeClick(id){if(linkMode){if(!linkFrom){linkFrom=id;toast('🔗 Τώρα κλικ στο δεύτερο στοιχείο');}else if(linkFrom!==id){G.board.free.links.push({a:linkFrom,b:id,color:'#9aa7b6',label:''});linkFrom=null;save();renderBoard();toast('✅ Σύνδεση προστέθηκε');}return;}selFree=id;renderBoard();editFree(id);}
+function addRegion(){ensureFree();const cols=['#ffd8a8','#d0bfff','#a5d8ff','#ffc9c9','#b2f2bb','#ffec99','#eebefa','#c3fae8'];const f=G.board.free;const r={id:uid('r'),x:f.w/2-70,y:f.h/2-50,w:140,h:100,shape:'rect',name:'Δωμάτιο',color:cols[f.regions.length%cols.length]};f.regions.push(r);selFree=r.id;save();renderBoard();editFree(r.id);}
+function addNode(){ensureFree();const f=G.board.free;const n={id:uid('n'),x:f.w/2,y:f.h/2,name:'Πόλη',color:'#e5b567'};f.nodes.push(n);selFree=n.id;save();renderBoard();editFree(n.id);}
+function toggleLinkMode(){linkMode=!linkMode;linkFrom=null;document.getElementById('linkBtn').classList.toggle('on',linkMode);toast(linkMode?'🔗 Λειτουργία σύνδεσης ΕΝΕΡΓΗ':'Λειτουργία σύνδεσης ανενεργή');}
+function editFree(id){const it=freeItem(id);if(!it)return;const ed=document.getElementById('editorBox');ed.className='';const isNode=it.w===undefined;
+  let h='<h2 class="sec" style="font-size:14px">'+(isNode?'📍 Κόμβος/Πόλη':'🏠 Περιοχή/Δωμάτιο')+'</h2>'+
+    '<label class="f"><span>Όνομα</span><input value="'+esc(it.name)+'" oninput="freeSet(\''+id+'\',\'name\',this.value)"></label>'+
+    '<label class="f"><span>Χρώμα</span><input type="color" value="'+it.color+'" oninput="freeSet(\''+id+'\',\'color\',this.value)"></label>';
+  if(!isNode)h+='<label class="f"><span>Σχήμα</span><select onchange="freeSet(\''+id+'\',\'shape\',this.value)"><option value="rect" '+(it.shape==='rect'?'selected':'')+'>Ορθογώνιο</option><option value="circle" '+(it.shape==='circle'?'selected':'')+'>Κύκλος</option></select></label>'+
+    '<div class="row"><label class="f"><span>Πλάτος</span><input type="number" value="'+it.w+'" oninput="freeSet(\''+id+'\',\'w\',+this.value)"></label><label class="f"><span>Ύψος</span><input type="number" value="'+it.h+'" oninput="freeSet(\''+id+'\',\'h\',+this.value)"></label></div>';
+  h+='<button class="btn sm" onclick="linkFrom=\''+id+'\';linkMode=true;document.getElementById(\'linkBtn\').classList.add(\'on\');toast(\'🔗 Κλικ σε άλλο στοιχείο\')">🔗 Σύνδεσε από εδώ</button> '+
+    '<button class="btn sm danger" onclick="delFree(\''+id+'\')">🗑️ Διαγραφή</button>';
+  ed.innerHTML=h;}
+function freeSet(id,k,v){const it=freeItem(id);if(!it)return;it[k]=v;save();renderBoard();}
+function delFree(id){const f=G.board.free;f.regions=f.regions.filter(r=>r.id!==id);f.nodes=f.nodes.filter(n=>n.id!==id);f.links=f.links.filter(l=>l.a!==id&&l.b!==id);selFree=null;save();renderBoard();document.getElementById('editorBox').className='empty';document.getElementById('editorBox').textContent='Επίλεξε στοιχείο για επεξεργασία.';}
+function renderLinkList(){ensureFree();const c=document.getElementById('linkList');const ls=G.board.free.links;if(!ls.length){c.innerHTML='<p class="hint">Καμία σύνδεση.</p>';return;}
+  c.innerHTML=ls.map((l,i)=>{const a=freeItem(l.a),b=freeItem(l.b);return'<div class="deck-item" style="cursor:default;gap:6px"><input type="color" value="'+(l.color||'#9aa7b6')+'" style="width:34px;height:28px;padding:2px;flex:0" oninput="G.board.free.links['+i+'].color=this.value;save();renderBoard()"><span class="dn" style="font-size:12px">'+esc((a&&a.name)||'?')+' — '+esc((b&&b.name)||'?')+'</span><input value="'+esc(l.label||'')+'" placeholder="ετ." style="width:44px;flex:0" oninput="G.board.free.links['+i+'].label=this.value;save();renderBoard()"><button class="icard-btn" onclick="G.board.free.links.splice('+i+',1);save();renderBoard()">✕</button></div>';}).join('');}
+
+/* ============ DUNGEON (HeroQuest) ============ */
+function ensureDungeon(){if(!G.board.dungeon)G.board.dungeon={rows:13,cols:19,cells:{}};if(!G.board.dungeon.cells)G.board.dungeon.cells={};}
+function buildDungeon(container,editable){ensureDungeon();const d=G.board.dungeon;
+  Object.assign(container.style,{display:'grid',gap:'1px',margin:'0 auto',width:'fit-content',position:'relative',height:'auto',background:'#0b0e12',padding:'2px',borderRadius:'8px',gridTemplateRows:''});
+  container.style.gridTemplateColumns='repeat('+d.cols+',26px)';
+  container.innerHTML='';
+  for(let r=0;r<d.rows;r++)for(let c=0;c<d.cols;c++){const key=r+'_'+c;const cell=d.cells[key]||{};const t=cell.t||'floor';const el=document.createElement('div');el.className='dcell';el.style.background=(DT[t]||DT.floor).color;el.style.width='26px';el.style.height='26px';el.textContent=cell.i||'';el.dataset.key=key;
+    if(editable){el.onpointerdown=e=>{e.preventDefault();painting=true;paintCell(key);};el.onpointerenter=()=>{if(painting)paintCell(key);};}
+    container.appendChild(el);}
+}
+function paintCell(key){ensureDungeon();const d=G.board.dungeon;if(dBrush.kind==='erase'){delete d.cells[key];}
+  else{const cell=d.cells[key]||{};if(dBrush.kind==='terrain')cell.t=dBrush.value;else cell.i=dBrush.value;d.cells[key]=cell;}
+  const el=document.querySelector('#board .dcell[data-key="'+key+'"]');if(el){const cell=d.cells[key]||{};el.style.background=(DT[cell.t||'floor']).color;el.textContent=cell.i||'';}save();}
+function renderPalettes(){const tp=document.getElementById('terrainPal');tp.innerHTML=Object.keys(DT).map(k=>'<div class="pbtn'+(dBrush.kind==='terrain'&&dBrush.value===k?' sel':'')+'" onclick="pickBrush(\'terrain\',\''+k+'\')"><span style="width:16px;height:16px;border-radius:3px;background:'+DT[k].color+';display:inline-block"></span><span class="pl">'+DT[k].label+'</span></div>').join('');
+  const ip=document.getElementById('iconPal');ip.innerHTML=DICONS.map(ic=>'<div class="pbtn'+(dBrush.kind==='icon'&&dBrush.value===ic?' sel':'')+'" onclick="pickBrush(\'icon\',\''+ic+'\')">'+ic+'</div>').join('')+'<div class="pbtn'+(dBrush.kind==='erase'?' sel':'')+'" onclick="pickBrush(\'erase\',\'\')">🧽<span class="pl">Σβήσε</span></div>';}
+function pickBrush(kind,value){dBrush={kind,value};renderPalettes();}
+document.addEventListener('pointerup',()=>{painting=false;});
+
+/* ============ DISPATCH ============ */
+function buildByMode(container,editable){const m=G.board.mode;
+  if(m==='hex')return buildHexBoard(container,editable);
+  if(m==='free')return buildFreeBoard(container,editable);
+  if(m==='dungeon')return buildDungeon(container,editable);
+  const pos=buildBoardInto(container,editable);if(editable){document.getElementById('b-count').textContent=tileCount()+' πλακίδια';renderConns();}return pos;}
+function setMode(m){G.board.mode=m;if(m==='hex'&&!G.board.hex)G.board.hex={shape:'island',preset:'catan',rows:5,cols:5,tiles:{}};if(m==='free')ensureFree();if(m==='dungeon')ensureDungeon();resetSelForMode();save();renderBoard();}
+function resetSelForMode(){selTile=selHex=selFree=null;const ed=document.getElementById('editorBox');ed.className='empty';ed.textContent='Επίλεξε στοιχείο για επεξεργασία.';}
+function defaultSize(m){if(m==='loop')return{r:7,c:7};if(m==='snake')return{r:6,c:6};if(m==='grid')return{r:5,c:6};}
+function setSize(){G.board.rows=Math.max(2,Math.min(16,+document.getElementById('b-rows').value||2));G.board.cols=Math.max(2,Math.min(16,+document.getElementById('b-cols').value||2));save();renderBoard();}
+function toggleBoardControls(){const m=G.board.mode;const map={path:['loop','snake','grid'].includes(m),hex:m==='hex',free:m==='free',dungeon:m==='dungeon'};
+  document.getElementById('ctl-path').classList.toggle('hidden',!map.path);
+  document.getElementById('ctl-hex').classList.toggle('hidden',!map.hex);
+  document.getElementById('ctl-free').classList.toggle('hidden',!map.free);
+  document.getElementById('ctl-dungeon').classList.toggle('hidden',!map.dungeon);}
+function renderBoard(){
+  document.getElementById('b-mode').value=G.board.mode;toggleBoardControls();
+  if(['loop','snake','grid'].includes(G.board.mode)){document.getElementById('b-rows').value=G.board.rows;document.getElementById('b-cols').value=G.board.cols;document.getElementById('b-bg').value=G.board.bg;}
+  if(G.board.mode==='hex'){document.getElementById('hx-shape').value=G.board.hex.shape;document.getElementById('hx-preset').value=G.board.hex.preset||'catan';document.getElementById('hx-rows').value=G.board.hex.rows||5;document.getElementById('hx-cols').value=G.board.hex.cols||5;document.getElementById('hx-island').classList.toggle('hidden',G.board.hex.shape!=='island');document.getElementById('hx-rect').classList.toggle('hidden',G.board.hex.shape!=='rect');}
+  if(G.board.mode==='free'){renderLinkList();document.getElementById('linkBtn').classList.toggle('on',linkMode);document.getElementById('fr-w').value=G.board.free.w;document.getElementById('fr-h').value=G.board.free.h;}
+  if(G.board.mode==='dungeon'){document.getElementById('dg-rows').value=G.board.dungeon.rows;document.getElementById('dg-cols').value=G.board.dungeon.cols;renderPalettes();}
+  buildByMode(document.getElementById('board'),true);renderLegend();}
+function renderLegend(){const l=document.getElementById('legend');l.innerHTML='';const m=G.board.mode;
+  if(['loop','snake','grid'].includes(m)){const used=new Set();const n=tileCount();for(let i=0;i<n;i++)used.add(tileData(i).type);used.forEach(t=>{const info=TYPES[t];l.innerHTML+='<div class="li"><span class="swatch" style="background:'+info.color+'"></span>'+info.icon+' '+info.label+'</div>';});}
+  else if(m==='hex'){const used=new Set();Object.values(G.board.hex.tiles).forEach(t=>t.res&&used.add(t.res));if(!used.size)['wood','brick','sheep','wheat','ore'].forEach(x=>used.add(x));used.forEach(k=>{l.innerHTML+='<div class="li"><span class="swatch" style="background:'+RES[k].color+'"></span>'+RES[k].icon+' '+RES[k].label+'</div>';});}
+  else if(m==='dungeon'){Object.keys(DT).forEach(k=>{l.innerHTML+='<div class="li"><span class="swatch" style="background:'+DT[k].color+'"></span>'+DT[k].label+'</div>';});}
+  else if(m==='free'){l.innerHTML='<div class="li">🏠 '+G.board.free.regions.length+' περιοχές · 📍 '+G.board.free.nodes.length+' κόμβοι · 🔗 '+G.board.free.links.length+' συνδέσεις</div>';}}
+
+/* ============ CARDS ============ */
+function addDeck(){const colors=['#ffd43b','#74c0fc','#b197fc','#ffa8a8','#8ce99a','#ffc078'];const d={id:uid('d'),name:'Νέα τράπουλα',color:colors[G.decks.length%colors.length],cards:[]};G.decks.push(d);selDeck=d.id;save();renderDecks();}
+function renderDecks(){const list=document.getElementById('deckList');if(!G.decks.length){list.innerHTML='<p class="hint">Δεν υπάρχουν τράπουλες.</p>';document.getElementById('deckHeader').innerHTML='';document.getElementById('cardsGrid').innerHTML='';return;}
+  if(!selDeck||!G.decks.find(d=>d.id===selDeck))selDeck=G.decks[0].id;
+  list.innerHTML=G.decks.map(d=>'<div class="deck-item '+(d.id===selDeck?'active':'')+'" onclick="selDeck=\''+d.id+'\';renderDecks()"><span class="dot" style="background:'+d.color+'"></span><span class="dn">'+esc(d.name)+'</span><span class="dc">'+d.cards.length+'</span></div>').join('');
+  const d=G.decks.find(x=>x.id===selDeck);
+  document.getElementById('deckHeader').innerHTML='<div class="card"><div class="row"><label class="f" style="flex:2"><span>Όνομα τράπουλας</span><input value="'+esc(d.name)+'" oninput="deckSet(\'name\',this.value)"></label><label class="f" style="flex:0;min-width:70px"><span>Χρώμα</span><input type="color" value="'+d.color+'" oninput="deckSet(\'color\',this.value)"></label><button class="btn sm" style="flex:0" onclick="addCard()">➕ Κάρτα</button><button class="btn sm danger" style="flex:0" onclick="delDeck()">🗑️</button></div></div>';
+  renderCards();}
+function deckSet(k,v){const d=G.decks.find(x=>x.id===selDeck);d[k]=v;save();if(k!=='color')renderDecks();else renderDecks();}
+function delDeck(){if(!confirm('Διαγραφή τράπουλας;'))return;G.decks=G.decks.filter(d=>d.id!==selDeck);selDeck=null;save();renderDecks();}
+function addCard(){const d=G.decks.find(x=>x.id===selDeck);d.cards.push({title:'',text:''});save();renderDecks();}
+function renderCards(){const d=G.decks.find(x=>x.id===selDeck);const g=document.getElementById('cardsGrid');if(!d.cards.length){g.innerHTML='<p class="empty">Καμία κάρτα. Πάτα «➕ Κάρτα».</p>';return;}
+  g.innerHTML=d.cards.map((c,i)=>'<div class="gamecard" style="border-top:5px solid '+d.color+'"><div class="card-mini-actions"><button class="icard-btn" onclick="cardImg('+i+')" title="Εικόνα">🖼️</button>'+(c.img?'<button class="icard-btn" onclick="cardImgRemove('+i+')" title="Αφαίρεση εικόνας">🚫</button>':'')+'<button class="icard-btn" onclick="delCard('+i+')">✕</button></div><div class="gc-head" style="border-color:'+d.color+'"><input style="border:none;background:transparent;font-weight:800;padding:0;font-size:13px" value="'+esc(c.title)+'" placeholder="Τίτλος..." oninput="cardSet('+i+',\'title\',this.value)"></div>'+(c.img?'<img src="'+c.img+'" style="width:100%;height:88px;object-fit:cover;border-radius:6px;margin-bottom:6px">':'')+'<textarea style="border:none;background:transparent;padding:0;flex:1;min-height:50px;font-size:12.5px" placeholder="Κείμενο κάρτας..." oninput="cardSet('+i+',\'text\',this.value)">'+esc(c.text)+'</textarea><div class="gc-tag">'+esc(d.name)+'</div></div>').join('');}
+function cardSet(i,k,v){const d=G.decks.find(x=>x.id===selDeck);d.cards[i][k]=v;save();}
+function delCard(i){const d=G.decks.find(x=>x.id===selDeck);d.cards.splice(i,1);save();renderDecks();}
+
+/* ============ PIECES ============ */
+function addPiece(){const cols=['#e23b3b','#5aa9ff','#3fb950','#e5b567','#b197fc','#ff922b'];G.pieces.push({id:uid('p'),name:'Παίκτης '+(G.pieces.length+1),color:cols[G.pieces.length%cols.length],shape:SHAPES[G.pieces.length%SHAPES.length]});save();renderPieces();}
+function renderPieces(){const g=document.getElementById('pieceGrid');if(!G.pieces.length){g.innerHTML='<p class="empty" style="grid-column:1/-1">Κανένα πιόνι.</p>';return;}
+  g.innerHTML=G.pieces.map((p,i)=>'<div class="piece-card"><button class="icard-btn" style="position:absolute;top:6px;right:6px" onclick="delPiece('+i+')">✕</button><div class="piece-token" style="background:'+p.color+'">'+p.shape+'</div><input value="'+esc(p.name)+'" oninput="pieceSet('+i+',\'name\',this.value)" style="text-align:center;font-weight:700"><input type="color" value="'+p.color+'" oninput="pieceSet('+i+',\'color\',this.value)" style="margin-top:6px"><div class="shape-picker">'+SHAPES.map(s=>'<div class="shape-opt '+(p.shape===s?'sel':'')+'" onclick="pieceSet('+i+',\'shape\',\''+s+'\')">'+s+'</div>').join('')+'</div></div>').join('');}
+function pieceSet(i,k,v){G.pieces[i][k]=v;save();renderPieces();}
+function delPiece(i){G.pieces.splice(i,1);save();renderPieces();}
+
+/* ============ DICE ============ */
+function rollDie(s){return 1+Math.floor(Math.random()*s);}
+function rollTest(){const n=G.dice.count,s=G.dice.sides;const area=document.getElementById('diceArea');area.innerHTML='';let total=0,vals=[];for(let i=0;i<n;i++){const v=rollDie(s);vals.push(v);total+=v;const d=document.createElement('div');d.className='die rolling';d.textContent=v;area.appendChild(d);setTimeout(()=>d.classList.remove('rolling'),500);}document.getElementById('diceResult').textContent='Αποτέλεσμα: '+vals.join(' + ')+' = '+total;}
+
+/* ============ RULES ============ */
+function fillRules(){document.getElementById('r-setup').value=G.rules.setup||'';document.getElementById('r-play').value=G.rules.play||'';document.getElementById('r-special').value=G.rules.special||'';document.getElementById('r-win').value=G.rules.win||'';}
+
+/* ============ PLAY ============ */
+function setupPlay(){play={players:G.pieces.length?G.pieces.map(p=>({name:p.name,color:p.color,shape:p.shape,pos:0})):[{name:'Παίκτης 1',color:'#e23b3b',shape:'🔴',pos:0}],turn:0,over:false,freeMode:!(G.board.mode==='loop'||G.board.mode==='snake'),tokenPos:{}};document.getElementById('freeMoveChk').checked=play.freeMode;logClear();log('🎮 Νέα παρτίδα ξεκίνησε!');renderPlay();}
+function isPathMode(){return(G.board.mode==='loop'||G.board.mode==='snake')&&!play.freeMode;}
+function renderPlay(){const bd=document.getElementById('playBoard');document.getElementById('freeMoveChk').checked=play.freeMode;
+  if(isPathMode()){const positions=buildBoardInto(bd,false);const map={};positions.forEach(p=>map[p.index]=p);
+    play.players.forEach((pl,idx)=>{const pos=map[pl.pos];if(!pos)return;const tile=[...bd.children].find(el=>+el.style.gridRow===pos.r&&+el.style.gridColumn===pos.c&&el.classList.contains('tile'));if(tile){const tk=document.createElement('div');tk.className='token';tk.style.background=pl.color;tk.textContent=pl.shape;tk.style.position='absolute';tk.style.left=(4+idx*10)+'px';tk.style.top=(4+(idx%2)*22)+'px';tile.style.position='relative';tile.appendChild(tk);}});}
+  else{buildByMode(bd,false);overlayFreeTokens(bd);}
+  renderPlayers();renderDrawBtns();document.getElementById('rollBtn').disabled=play.over;requestAnimationFrame(fitPlayBoard);}
+/* sound + celebration */
+let _ac=null;
+function beep(freq,dur,type){try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();const o=_ac.createOscillator(),g=_ac.createGain();o.type=type||'square';o.frequency.value=freq;o.connect(g);g.connect(_ac.destination);g.gain.setValueAtTime(0.12,_ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,_ac.currentTime+dur);o.start();o.stop(_ac.currentTime+dur);}catch(e){}}
+function diceSound(){beep(320,0.06,'square');setTimeout(()=>beep(220,0.05,'square'),70);}
+function winSound(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0.18,'triangle'),i*120));}
+function confetti(){const box=document.createElement('div');box.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden';const cols=['#e23b3b','#e5b567','#5aa9ff','#b197fc','#fff','#ff922b'];for(let i=0;i<80;i++){const c=document.createElement('div');const sz=6+Math.random()*8;c.style.cssText='position:absolute;width:'+sz+'px;height:'+sz+'px;background:'+cols[i%cols.length]+';left:'+Math.random()*100+'%;top:-20px;border-radius:'+(Math.random()>.5?'50%':'2px')+';opacity:.95';box.appendChild(c);const dur=1800+Math.random()*1600,x=(Math.random()-.5)*260;c.animate([{transform:'translate(0,0) rotate(0)'},{transform:'translate('+x+'px,'+(window.innerHeight+60)+'px) rotate('+(Math.random()*720)+'deg)'}],{duration:dur,easing:'cubic-bezier(.3,.6,.5,1)'});}document.body.appendChild(box);setTimeout(()=>box.remove(),3600);}
+function overlayFreeTokens(container){container.style.position='relative';const layer=document.createElement('div');layer.className='tokenlayer';const bw=container.scrollWidth||container.clientWidth,bh=container.scrollHeight||container.clientHeight;
+  play.players.forEach((pl,idx)=>{if(!play.tokenPos[idx])play.tokenPos[idx]={x:6,y:6+idx*34};const p=play.tokenPos[idx];const t=document.createElement('div');t.className='ftoken';t.style.background=pl.color;t.textContent=pl.shape;t.style.left=p.x+'px';t.style.top=p.y+'px';dragToken(t,idx,bw,bh);layer.appendChild(t);});
+  container.appendChild(layer);}
+function dragToken(el,idx,bw,bh){el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);const sx=e.clientX,sy=e.clientY,p=play.tokenPos[idx],ox=p.x,oy=p.y;
+  function mm(ev){const s=playScale||1;p.x=Math.max(0,Math.min(bw-30,ox+(ev.clientX-sx)/s));p.y=Math.max(0,Math.min(bh-30,oy+(ev.clientY-sy)/s));el.style.left=p.x+'px';el.style.top=p.y+'px';}
+  function mu(){el.removeEventListener('pointermove',mm);el.removeEventListener('pointerup',mu);}
+  el.addEventListener('pointermove',mm);el.addEventListener('pointerup',mu);});}
+function fitPlayBoard(){const wrap=document.getElementById('playWrap'),b=document.getElementById('playBoard');if(!wrap||!b||!play)return;b.style.transform='none';const nw=b.scrollWidth||b.offsetWidth,nh=b.scrollHeight||b.offsetHeight;if(!nw||!nh)return;const fs=wrap.classList.contains('fs');const aw=(fs?window.innerWidth:wrap.clientWidth)-24,ah=(fs?window.innerHeight:wrap.clientHeight)-24;let s=Math.min(aw/nw,ah/nh);s=Math.max(0.25,Math.min(s,3));playScale=s;b.style.transformOrigin='center center';b.style.transform='scale('+s+')';}
+function toggleFsPlay(){const wrap=document.getElementById('playWrap');wrap.classList.toggle('fs');document.body.style.overflow=wrap.classList.contains('fs')?'hidden':'';setTimeout(fitPlayBoard,60);}
+window.addEventListener('resize',()=>{if(document.getElementById('p-play').classList.contains('active'))fitPlayBoard();});
+window.addEventListener('orientationchange',()=>setTimeout(fitPlayBoard,250));
+document.addEventListener('keydown',e=>{if(!document.getElementById('p-play').classList.contains('active'))return;const tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='textarea'||tag==='select')return;if(e.key===' '||e.key==='r'||e.key==='R'){e.preventDefault();playRoll();}if(e.key==='Escape'){const w=document.getElementById('playWrap');if(w.classList.contains('fs'))toggleFsPlay();}if(e.key==='f'||e.key==='F'){toggleFsPlay();}});
+function renderPlayers(){const c=document.getElementById('playersList');c.innerHTML=play.players.map((p,i)=>'<div class="player-chip '+(i===play.turn&&!play.over?'turn':'')+'"><span class="pt" style="background:'+p.color+'">'+p.shape+'</span><span class="pn">'+esc(p.name)+'</span><span class="pp">'+(isPathMode()?'θέση '+(p.pos+1):'')+'</span>'+(play.players.length>1?'<button class="icard-btn" onclick="delPlayPlayer('+i+')">✕</button>':'')+'</div>').join('');}
+function addPlayer(){const name=document.getElementById('np-name').value.trim()||('Παίκτης '+(play.players.length+1));const cols=['#e23b3b','#5aa9ff','#3fb950','#e5b567','#b197fc','#ff922b'];play.players.push({name,color:cols[play.players.length%cols.length],shape:SHAPES[play.players.length%SHAPES.length],pos:0});document.getElementById('np-name').value='';renderPlay();}
+function delPlayPlayer(i){play.players.splice(i,1);delete play.tokenPos[i];if(play.turn>=play.players.length)play.turn=0;renderPlay();}
+function renderDrawBtns(){const c=document.getElementById('drawBtns');if(!G.decks.length){c.innerHTML='<p class="hint">Δεν υπάρχουν τράπουλες.</p>';return;}c.innerHTML=G.decks.map((d,i)=>'<button class="btn sm" style="border-left:4px solid '+d.color+'" onclick="drawCard('+i+')">🃏 '+esc(d.name)+' ('+d.cards.length+')</button>').join('');}
+function drawCard(di){const d=G.decks[di];if(!d.cards.length){toast('Άδεια τράπουλα');return;}const c=d.cards[Math.floor(Math.random()*d.cards.length)];log('🃏 <b>'+esc(d.name)+'</b>: '+esc(c.title||'')+((c.title&&c.text)?' — ':'')+esc(c.text||''));
+  document.getElementById('cardModalBox').innerHTML='<div class="gc-tag" style="color:'+d.color+';font-weight:800;text-transform:uppercase;letter-spacing:1px;font-size:11px">'+esc(d.name)+'</div><h3 style="margin:6px 0 10px;border-bottom:3px solid '+d.color+';padding-bottom:8px">'+esc(c.title||'—')+'</h3>'+(c.img?'<img src="'+c.img+'" style="width:100%;border-radius:8px;margin-bottom:10px">':'')+'<p style="white-space:pre-wrap;line-height:1.5">'+esc(c.text||'')+'</p><div style="text-align:right;margin-top:12px"><button class="btn primary" onclick="closeModal(\'cardModal\')">ΟΚ</button></div>';
+  const m=document.getElementById('cardModal');m.classList.add('show');m.onclick=()=>closeModal('cardModal');}
+function playRoll(){if(play.over)return;const pl=play.players[play.turn];const n=G.dice.count,s=G.dice.sides;const area=document.getElementById('playDice');area.innerHTML='';let total=0,vals=[];for(let i=0;i<n;i++){const v=rollDie(s);vals.push(v);total+=v;const el=document.createElement('div');el.className='die rolling';el.textContent=v;area.appendChild(el);setTimeout(()=>el.classList.remove('rolling'),500);}
+  diceSound();
+  log('🎲 <b>'+esc(pl.name)+'</b> έριξε '+vals.join('+')+' = '+total);
+  if(isPathMode()){const count=tileCount(),last=count-1;let np;if(G.board.mode==='loop')np=(pl.pos+total)%count;else{np=pl.pos+total;if(np>last)np=last;}pl.pos=np;renderPlay();setTimeout(()=>afterMove(pl),450);}
+  else{nextTurn();}}
+function afterMove(pl){const count=tileCount();const conn=(G.board.conns||[]).find(c=>c.from===pl.pos);if(conn){log((conn.to>conn.from?'🪜 Σκάλα':'🐍 Φιδάκι')+'! '+esc(pl.name)+': #'+(pl.pos+1)+' → #'+(conn.to+1));pl.pos=conn.to;renderPlay();}
+  const td=tileData(pl.pos),info=TYPES[td.type];if(td.note)log('📍 #'+(pl.pos+1)+' <b>'+esc(td.label||info.label)+'</b>: '+esc(td.note));else if(td.type!=='normal')log('📍 #'+(pl.pos+1)+' <b>'+esc(td.label||info.label)+'</b>');
+  if((G.board.mode!=='loop'&&pl.pos===count-1)||td.type==='finish'){play.over=true;log('🏆 <b>'+esc(pl.name)+' ΝΙΚΗΣΕ!</b>');toast('🏆 '+pl.name+' νίκησε!');winSound();confetti();renderPlayers();document.getElementById('rollBtn').disabled=true;return;}
+  if(td.type==='skip'){log('⏭️ '+esc(pl.name)+' χάνει την επόμενη σειρά');nextTurn();}
+  nextTurn();}
+function nextTurn(){if(play.players.length>1)play.turn=(play.turn+1)%play.players.length;renderPlayers();}
+function log(h){const l=document.getElementById('log');const d=document.createElement('div');d.className='lg';d.innerHTML=h;l.appendChild(d);l.scrollTop=l.scrollHeight;}
+function logClear(){document.getElementById('log').innerHTML='';}
+
+/* ============ LIBRARY / IO ============ */
+function openLibrary(){const lib=getLib();const el=document.getElementById('libList');const keys=Object.keys(lib);if(!keys.length)el.innerHTML='<p class="empty">Η βιβλιοθήκη είναι άδεια.</p>';else el.innerHTML=keys.sort((a,b)=>lib[b].updated-lib[a].updated).map(k=>'<div class="deck-item" style="cursor:default"><span>🎲</span><span class="dn">'+esc(lib[k].title)+'</span><span class="dc">'+new Date(lib[k].updated).toLocaleDateString('el')+'</span><button class="btn sm" onclick="loadFromLib(\''+k+'\')">Άνοιγμα</button><button class="icard-btn" onclick="delFromLib(\''+k+'\')">✕</button></div>').join('');document.getElementById('libModal').classList.add('show');}
+function loadFromLib(k){const lib=getLib();if(!lib[k])return;G=Object.assign(freshGame(),lib[k].data);ensureBoard();play=null;resetSel();save();refreshAll();closeModal('libModal');toast('📂 Φορτώθηκε');}
+function delFromLib(k){if(!confirm('Διαγραφή από βιβλιοθήκη;'))return;const lib=getLib();delete lib[k];setLib(lib);openLibrary();}
+function exportJSON(){const blob=new Blob([JSON.stringify(G,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(G.meta.title||'παιχνιδι').replace(/[^\wα-ωΑ-Ωά-ώΆ-Ώ]+/g,'_')+'.json';a.click();toast('⬇️ Εξήχθη');}
+function importJSON(){document.getElementById('fileIn').click();}
+/* generic image picker (downscales) */
+let _imgCb=null;
+function pickImage(cb,max){_imgCb={cb,max:max||340};document.getElementById('imgPick').click();}
+document.getElementById('imgPick').addEventListener('change',e=>{const f=e.target.files[0];if(!f||!_imgCb)return;const cb=_imgCb.cb,max=_imgCb.max;const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>max||h>max){const s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s);}const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);try{cb(cv.toDataURL('image/jpeg',0.85));}catch(err){alert('Πρόβλημα με την εικόνα.');}};img.src=r.result;};r.readAsDataURL(f);e.target.value='';});
+function tileImg(i){pickImage(d=>{const t=G.board.tiles[i]||{};t.img=d;G.board.tiles[i]=t;save();renderBoard();selectTile(i);});}
+function tileImgRemove(i){const t=G.board.tiles[i]||{};delete t.img;G.board.tiles[i]=t;save();renderBoard();selectTile(i);}
+function cardImg(i){pickImage(d=>{const dk=G.decks.find(x=>x.id===selDeck);dk.cards[i].img=d;save();renderCards();});}
+function cardImgRemove(i){const dk=G.decks.find(x=>x.id===selDeck);delete dk.cards[i].img;save();renderCards();}
+function uploadFreeImg(){document.getElementById('imgIn').click();}
+function removeFreeImg(){ensureFree();delete G.board.free.img;save();renderBoard();toast('🗑️ Το υπόβαθρο αφαιρέθηκε');}
+document.getElementById('imgIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const max=1400;let w=img.width,h=img.height;if(w>max){h=Math.round(h*max/w);w=max;}const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);ensureFree();try{G.board.free.img=cv.toDataURL('image/jpeg',0.82);G.board.free.w=w;G.board.free.h=h;save();renderBoard();toast('🖼️ Ο χάρτης προστέθηκε');}catch(err){alert('Πολύ μεγάλη εικόνα για αποθήκευση.');}};img.src=r.result;};r.readAsDataURL(f);e.target.value='';});
+document.getElementById('fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);G=Object.assign(freshGame(),o);if(!G.id)G.id='g_'+Date.now();ensureBoard();play=null;resetSel();save();refreshAll();toast('⬆️ Εισήχθη');}catch(err){alert('Μη έγκυρο αρχείο.');}};r.readAsText(f);e.target.value='';});
+
+/* ============ TEMPLATES ============ */
+function loadTemplate(t){if(!confirm('Φόρτωση προτύπου; Θα αντικαταστήσει το τρέχον παιχνίδι.'))return;G=freshGame();
+  if(t==='monopoly'){G.meta={title:'Η Πόλη μου',author:'',pmin:2,pmax:4,age:8,time:'60',desc:'Αγόρασε δρόμους, μάζεψε ενοίκια, γίνε ο πλουσιότερος!',goal:'Ο πιο πλούσιος παίκτης κερδίζει.'};G.board={mode:'loop',rows:7,cols:7,bg:'#132018',tiles:{0:{type:'start',label:'ΑΦΕΤΗΡΙΑ',note:'Πάρε 200€'},5:{type:'chance',note:'Τράβα κάρτα Τύχης'},10:{type:'jail',label:'Φυλακή'},12:{type:'chance',note:'Τράβα κάρτα Τύχης'},18:{type:'penalty',label:'Φόρος',note:'Πλήρωσε 100€'},24:{type:'bonus',label:'Δωροκάρτα',note:'Πάρε 150€'}},conns:[]};G.decks=[{id:uid('d'),name:'Τύχη',color:'#ffd43b',cards:[{title:'Λαχείο!',text:'Κέρδισες 100€.'},{title:'Πρόστιμο',text:'Πλήρωσε 50€.'},{title:'Πήγαινε στην Αφετηρία',text:'Μάζεψε 200€.'}]}];}
+  else if(t==='snake'){G.meta={title:'Φιδάκι & Σκάλες',author:'',pmin:2,pmax:4,age:5,time:'20',desc:'Ανέβα τις σκάλες, απόφυγε τα φίδια, φτάσε πρώτος!',goal:'Ο πρώτος στο τελευταίο τετράγωνο κερδίζει.'};G.board={mode:'snake',rows:6,cols:6,bg:'#101820',tiles:{35:{type:'finish',label:'ΤΕΡΜΑ'}},conns:[{from:2,to:14},{from:8,to:20},{from:28,to:11},{from:32,to:17}]};}
+  else if(t==='trivia'){G.meta={title:'Ξέρεις;',author:'',pmin:2,pmax:6,age:10,time:'30',desc:'Απάντησε σωστά για να προχωρήσεις!',goal:'Ο πρώτος στο τέρμα κερδίζει.'};G.board={mode:'snake',rows:5,cols:6,bg:'#101820',tiles:{29:{type:'finish',label:'ΤΕΡΜΑ'}},conns:[]};for(let i=1;i<28;i++){if(i%2)G.board.tiles[i]={type:'chance',note:'Τράβα κάρτα Ερώτησης'};}G.decks=[{id:uid('d'),name:'Ερωτήσεις',color:'#74c0fc',cards:[{title:'Γεωγραφία',text:'Ποια είναι η πρωτεύουσα της Ελλάδας;'},{title:'Ιστορία',text:'Πότε έγινε η Ελληνική Επανάσταση;'},{title:'Αθλητισμός',text:'Πόσοι παίκτες σε ομάδα ποδοσφαίρου;'}]}];}
+  else if(t==='race'){G.meta={title:'Ο Μεγάλος Αγώνας',author:'',pmin:2,pmax:4,age:6,time:'15',desc:'Τρέξε στη διαδρομή και φτάσε πρώτος!',goal:'Ο πρώτος στο τέρμα κερδίζει.'};G.board={mode:'snake',rows:4,cols:6,bg:'#101820',tiles:{0:{type:'start',label:'ΕΚΚΙΝΗΣΗ'},23:{type:'finish',label:'ΤΕΡΜΑ'},7:{type:'bonus',label:'Τούρμπο',note:'Ρίξε ξανά!'},15:{type:'penalty',label:'Λάστιχο',note:'Πήγαινε 2 πίσω.'}},conns:[]};}
+  else if(t==='catan'){G.meta={title:'Οι Άποικοι',author:'',pmin:3,pmax:4,age:10,time:'75',desc:'Χτίσε οικισμούς & δρόμους, μάζεψε πόρους, φτάσε πρώτος τους 10 πόντους!',goal:'Ο πρώτος με 10 πόντους νίκης.'};
+    G.board={mode:'hex',bg:'#0e1720',hex:{shape:'island',preset:'catan',rows:5,cols:5,tiles:{}}};
+    const resList=['ore','sheep','wood','wheat','brick','sheep','brick','wheat','wood','desert','wood','ore','wheat','sheep','ore','brick','wheat','wood','sheep'];
+    const numList=[10,2,9,12,6,4,10,9,11,0,3,8,8,3,4,5,5,6,11];
+    const cells=getHexCells().cells;cells.forEach((c,i)=>{const res=resList[i%resList.length];const num=res==='desert'?0:numList[i%numList.length];G.board.hex.tiles[c.key]={res,num};});
+    G.decks=[{id:uid('d'),name:'Ανάπτυξης',color:'#b197fc',cards:[{title:'Ιππότης',text:'Μετακίνησε τον ληστή.'},{title:'Δρόμος',text:'Χτίσε 2 δρόμους δωρεάν.'},{title:'Μονοπώλιο',text:'Πάρε από όλους έναν πόρο.'},{title:'Εφεύρεση',text:'Πάρε 2 πόρους της επιλογής σου.'},{title:'Πόντος Νίκης',text:'+1 πόντος νίκης.'}]}];
+    G.pieces=[{id:uid('p'),name:'Κόκκινος',color:'#e23b3b',shape:'🔴'},{id:uid('p'),name:'Μπλε',color:'#5aa9ff',shape:'🔵'},{id:uid('p'),name:'Πορτοκαλί',color:'#ff922b',shape:'🟠'},{id:uid('p'),name:'Λευκός',color:'#e9ecef',shape:'⚪'}];}
+  else if(t==='cluedo'){G.meta={title:'Το Μυστήριο',author:'',pmin:3,pmax:6,age:8,time:'45',desc:'Ανακάλυψε ΠΟΙΟΣ, με ΤΙ όπλο και σε ΠΟΙΟ δωμάτιο!',goal:'Μάντεψε σωστά το περιεχόμενο του φακέλου του μυστηρίου.'};
+    const rooms=[['Κουζίνα',30,20,'#ffd8a8'],['Τραπεζαρία',360,20,'#a5d8ff'],['Σαλόνι',690,20,'#ffc9c9'],['Ωδείο',30,240,'#d0bfff'],['Χωλ',360,240,'#c3fae8'],['Βιβλιοθήκη',690,240,'#ffec99'],['Μπιλιάρδο',30,460,'#eebefa'],['Αίθουσα Χορού',360,460,'#b2f2bb'],['Γραφείο',690,460,'#ffd8a8']];
+    const regions=rooms.map(r=>({id:uid('r'),x:r[1],y:r[2],w:180,h:140,shape:'rect',name:r[0],color:r[3]}));
+    G.board={mode:'free',bg:'#141a22',free:{w:900,h:620,regions,nodes:[],links:[{a:regions[0].id,b:regions[8].id,color:'#e5b567',label:'🤫'},{a:regions[2].id,b:regions[6].id,color:'#e5b567',label:'🤫'}]}};
+    G.decks=[{id:uid('d'),name:'Ύποπτοι',color:'#e23b3b',cards:[{title:'Δις Σκάρλετ',text:''},{title:'Συνταγματάρχης Μάσταρντ',text:''},{title:'Κα Πίκοκ',text:''},{title:'Καθηγητής Πλαμ',text:''},{title:'Κος Γκριν',text:''},{title:'Κα Ουάιτ',text:''}]},
+      {id:uid('d'),name:'Όπλα',color:'#8a94a3',cards:[{title:'Μαχαίρι',text:''},{title:'Κηροπήγιο',text:''},{title:'Περίστροφο',text:''},{title:'Σχοινί',text:''},{title:'Λοστός',text:''},{title:'Γαλλικό Κλειδί',text:''}]},
+      {id:uid('d'),name:'Δωμάτια',color:'#74c0fc',cards:rooms.map(r=>({title:r[0],text:''}))}];
+    G.rules={setup:'Χώρισε κρυφά 1 ύποπτο + 1 όπλο + 1 δωμάτιο στον «φάκελο μυστηρίου». Μοίρασε τις υπόλοιπες κάρτες στους παίκτες.',play:'Ρίξε ζάρι, μπες σε δωμάτιο και κάνε υπόθεση (ύποπτος+όπλο+δωμάτιο). Ο διπλανός σου αναιρεί δείχνοντάς σου κρυφά μία κάρτα.',special:'🤫 Μυστικά περάσματα ενώνουν αντικριστές γωνιακές αίθουσες.',win:'Όταν είσαι σίγουρος, κάνε τελική «κατηγορία». Αν ταιριάζει με τον φάκελο, κέρδισες!'};
+    G.pieces=[{id:uid('p'),name:'Σκάρλετ',color:'#e23b3b',shape:'🔴'},{id:uid('p'),name:'Μάσταρντ',color:'#e5b567',shape:'🟡'},{id:uid('p'),name:'Πίκοκ',color:'#5aa9ff',shape:'🔵'},{id:uid('p'),name:'Πλαμ',color:'#b197fc',shape:'🟣'}];}
+  else if(t==='train'){G.meta={title:'Σιδηρόδρομοι Ελλάδας',author:'',pmin:2,pmax:5,age:8,time:'60',desc:'Χτίσε σιδηροδρομικές διαδρομές, σύνδεσε πόλεις, ολοκλήρωσε προορισμούς!',goal:'Ο παίκτης με τους περισσότερους πόντους (διαδρομές + προορισμοί) κερδίζει.'};
+    const cities=[['Θεσσαλονίκη',470,90],['Καβάλα',660,110],['Ιωάννινα',230,220],['Λάρισα',450,240],['Βόλος',540,300],['Κέρκυρα',120,210],['Πάτρα',300,410],['Αθήνα',530,430],['Καλαμάτα',350,540],['Ηράκλειο',620,580]];
+    const nodes=cities.map(c=>({id:uid('n'),x:c[1],y:c[2],name:c[0],color:'#e5b567'}));
+    const N=n=>nodes.find(x=>x.name===n).id;
+    const links=[['Θεσσαλονίκη','Καβάλα','#5aa9ff','2'],['Θεσσαλονίκη','Λάρισα','#e5b567','3'],['Θεσσαλονίκη','Ιωάννινα','#e23b3b','4'],['Ιωάννινα','Κέρκυρα','#9aa7b6','2'],['Ιωάννινα','Πάτρα','#ff922b','4'],['Λάρισα','Βόλος','#9aa7b6','1'],['Λάρισα','Αθήνα','#2b333e','4'],['Βόλος','Αθήνα','#b197fc','3'],['Πάτρα','Αθήνα','#e5b567','3'],['Πάτρα','Καλαμάτα','#e23b3b','3'],['Καλαμάτα','Αθήνα','#9aa7b6','3'],['Αθήνα','Ηράκλειο','#5aa9ff','4'],['Καβάλα','Λάρισα','#ff922b','4']].map(l=>({a:N(l[0]),b:N(l[1]),color:l[2],label:l[3]}));
+    G.board={mode:'free',bg:'#0f1a24',free:{w:820,h:640,regions:[],nodes,links}};
+    G.decks=[{id:uid('d'),name:'Προορισμοί',color:'#3fb950',cards:[{title:'Αθήνα → Θεσσαλονίκη',text:'8 πόντοι'},{title:'Πάτρα → Καβάλα',text:'11 πόντοι'},{title:'Κέρκυρα → Ηράκλειο',text:'13 πόντοι'},{title:'Ιωάννινα → Αθήνα',text:'7 πόντοι'},{title:'Καλαμάτα → Λάρισα',text:'9 πόντοι'}]},{id:uid('d'),name:'Βαγόνια',color:'#e5b567',cards:[{title:'Κόκκινο',text:''},{title:'Μπλε',text:''},{title:'Κίτρινο',text:''},{title:'Μαύρο',text:''},{title:'Πορτοκαλί',text:''},{title:'Μωβ',text:''},{title:'Λευκό',text:''},{title:'Τζόκερ 🃏',text:'Οποιοδήποτε χρώμα'}]}];
+    G.rules={setup:'Κάθε παίκτης παίρνει 4 κάρτες βαγονιών & 3 κάρτες προορισμών (κρατά ≥2).',play:'Στη σειρά σου: (α) τράβα 2 κάρτες βαγονιών, ή (β) διεκδίκησε μια διαδρομή παίζοντας κάρτες ίδιου χρώματος όσα τα κουτάκια της, ή (γ) τράβα νέους προορισμούς.',special:'Ο αριθμός στη διαδρομή = πόσα βαγόνια χρειάζεσαι.',win:'Στο τέλος: πόντοι διαδρομών + ολοκληρωμένοι προορισμοί − ανεκπλήρωτοι. Ο μεγαλύτερος κερδίζει.'};
+    G.pieces=[{id:uid('p'),name:'Παίκτης 1',color:'#e23b3b',shape:'🚂'},{id:uid('p'),name:'Παίκτης 2',color:'#5aa9ff',shape:'🚂'},{id:uid('p'),name:'Παίκτης 3',color:'#e5b567',shape:'🚂'}];}
+  else if(t==='heroquest'){G.meta={title:'Το Μπουντρούμι',author:'',pmin:2,pmax:5,age:10,time:'90',desc:'Οι ήρωες εξερευνούν το μπουντρούμι, νικούν τέρατα και βρίσκουν θησαυρούς!',goal:'Ολοκλήρωσε την αποστολή του σεναρίου.'};
+    G.board={mode:'dungeon',dungeon:{rows:13,cols:19,cells:{}}};const D=G.board.dungeon.cells;
+    const R=G.board.dungeon.rows,C=G.board.dungeon.cols;
+    for(let c=0;c<C;c++){D[0+'_'+c]={t:'wall'};D[(R-1)+'_'+c]={t:'wall'};}
+    for(let r=0;r<R;r++){D[r+'_0']={t:'wall'};D[r+'_'+(C-1)]={t:'wall'};}
+    function room(r1,c1,r2,c2){for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){const edge=(r===r1||r===r2||c===c1||c===c2);D[r+'_'+c]=edge?{t:'wall'}:{t:'room'};}}
+    room(1,1,5,6);room(1,11,4,17);room(8,2,11,7);room(7,11,11,17);
+    D['3_6']={t:'floor',i:'🚪'};D['4_11']={t:'floor',i:'🚪'};D['8_5']={t:'floor',i:'🚪'};D['9_11']={t:'floor',i:'🚪'};
+    D['2_2']={t:'room',i:'🧙'};D['2_3']={t:'room',i:'⚔️'};D['3_14']={t:'room',i:'👹'};D['2_15']={t:'room',i:'💰'};
+    D['10_4']={t:'room',i:'💀'};D['9_15']={t:'room',i:'🐉'};D['10_15']={t:'room',i:'💰'};D['6_9']={t:'water'};D['6_10']={t:'water'};
+    D['11_2']={t:'room',i:'⬆️'};D['5_9']={t:'lava'};D['7_5']={t:'floor',i:'🪤'};
+    G.decks=[{id:uid('d'),name:'Θησαυροί',color:'#e5b567',cards:[{title:'Χρυσά νομίσματα',text:'+50 χρυσά'},{title:'Φίλτρο ζωής',text:'Επανάφερε 4 σημεία σώματος'},{title:'Παγίδα!',text:'Χάνεις 1 σημείο σώματος'},{title:'Μαγικό σπαθί',text:'+1 στην επίθεση'}]},{id:uid('d'),name:'Ξόρκια',color:'#b197fc',cards:[{title:'Μπάλα φωτιάς',text:'3 ζάρια επίθεσης εξ αποστάσεως'},{title:'Θεραπεία',text:'+4 σημεία σώματος'},{title:'Αόρατος',text:'Δεν σε βλέπουν τα τέρατα 1 γύρο'}]}];
+    G.pieces=[{id:uid('p'),name:'Βάρβαρος',color:'#e23b3b',shape:'⚔️'},{id:uid('p'),name:'Νάνος',color:'#e5b567',shape:'🛡️'},{id:uid('p'),name:'Ξωτικό',color:'#5aa9ff',shape:'🏹'},{id:uid('p'),name:'Μάγος',color:'#b197fc',shape:'🧙'}];
+    G.rules={setup:'Τοποθέτησε τους ήρωες στην είσοδο. Ο Αφέντης του Μπουντρουμιού ελέγχει τα τέρατα.',play:'Στη σειρά σου: μετακινήσου (ρίξε ζάρια για βήματα) ΚΑΙ κάνε μία ενέργεια (επίθεση/ξόρκι/έρευνα).',special:'Έρευνα δωματίου: τράβα κάρτα Θησαυρού. Πόρτες 🚪 ανοίγουν νέα δωμάτια.',win:'Ολοκλήρωσε τον στόχο του σεναρίου και βγες ζωντανός!'};}
+  else if(t==='war'){G.meta={title:'Κατάκτηση',author:'',pmin:2,pmax:6,age:10,time:'120',desc:'Κατέκτησε περιοχές, χτίσε στρατούς, κυριάρχησε στον χάρτη!',goal:'Κατέκτησε όλες τις περιοχές (ή τους στόχους σου).'};
+    const areas=[['Βορράς',60,40,'#ffc9c9'],['Δύση',60,230,'#a5d8ff'],['Κέντρο',330,150,'#ffec99'],['Ανατολή',620,60,'#d0bfff'],['Νότος',330,420,'#b2f2bb'],['Νησιά',640,400,'#c3fae8']];
+    const regions=areas.map(a=>({id:uid('r'),x:a[1],y:a[2],w:200,h:150,shape:'rect',name:a[0],color:a[3]}));
+    const K=n=>regions.find(r=>r.name===n).id;
+    const links=[['Βορράς','Δύση'],['Βορράς','Κέντρο'],['Δύση','Κέντρο'],['Κέντρο','Ανατολή'],['Κέντρο','Νότος'],['Νότος','Νησιά'],['Ανατολή','Νησιά']].map(l=>({a:K(l[0]),b:K(l[1]),color:'#e23b3b',label:''}));
+    G.board={mode:'free',bg:'#0f1622',free:{w:880,h:600,regions,nodes:[],links}};
+    G.decks=[{id:uid('d'),name:'Ενισχύσεις',color:'#e23b3b',cards:[{title:'+3 στρατοί',text:''},{title:'Πυροβολικό',text:'+1 στην επίθεση'},{title:'Ιππικό',text:'Κινήσου σε 2 περιοχές'}]}];
+    G.pieces=[{id:uid('p'),name:'Κόκκινος',color:'#e23b3b',shape:'🔴'},{id:uid('p'),name:'Μπλε',color:'#5aa9ff',shape:'🔵'},{id:uid('p'),name:'Κίτρινος',color:'#e5b567',shape:'🟡'}];}
+  else if(t==='life'){G.meta={title:'Η Ζωή',author:'',pmin:2,pmax:4,age:8,time:'60',desc:'Ταξίδεψε στη ζωή: σπουδές, καριέρα, γάμος, παιδιά — φτάσε στη σύνταξη με τα περισσότερα λεφτά!',goal:'Ο πλουσιότερος στη σύνταξη κερδίζει.'};
+    G.board={mode:'snake',rows:6,cols:8,bg:'#101820',tiles:{0:{type:'start',label:'ΞΕΚΙΝΑ',note:'Διάλεξε: Σπουδές ή Καριέρα'},47:{type:'finish',label:'ΣΥΝΤΑΞΗ'}},conns:[]};
+    [3,11,19,27,35,43].forEach(i=>G.board.tiles[i]={type:'bonus',label:'Μισθός',note:'Πάρε 5.000€'});
+    [7,23,39].forEach(i=>G.board.tiles[i]={type:'event',label:'Ζωή',note:'Τράβα κάρτα Ζωής'});
+    [15,31].forEach(i=>G.board.tiles[i]={type:'penalty',label:'Έξοδα',note:'Πλήρωσε 4.000€'});
+    G.board.tiles[9]={type:'chance',label:'Γάμος',note:'Παντρέψου! +πιόνι'};G.board.tiles[21]={type:'chance',label:'Παιδί',note:'+1 παιδί'};
+    G.decks=[{id:uid('d'),name:'Ζωής',color:'#8ce99a',cards:[{title:'Προαγωγή!',text:'+8.000€'},{title:'Λαχείο',text:'+20.000€'},{title:'Ατύχημα',text:'−6.000€'},{title:'Κληρονομιά',text:'+10.000€'},{title:'Επισκευή σπιτιού',text:'−5.000€'}]}];
+    G.pieces=[{id:uid('p'),name:'Παίκτης 1',color:'#e23b3b',shape:'🚗'},{id:uid('p'),name:'Παίκτης 2',color:'#5aa9ff',shape:'🚗'}];}
+  else if(t==='goose'){G.meta={title:'Το Παιχνίδι της Χήνας',author:'',pmin:2,pmax:6,age:5,time:'20',desc:'Κλασικό παιχνίδι διαδρομής 63 θέσεων με χήνες, γέφυρα και εκπλήξεις!',goal:'Ο πρώτος που θα φτάσει ακριβώς στο 63 κερδίζει.'};
+    G.board={mode:'snake',rows:9,cols:7,bg:'#141d14',tiles:{0:{type:'start',label:'ΑΦΕΤΗΡΙΑ'},62:{type:'finish',label:'ΤΕΡΜΑ 63'}},conns:[{from:5,to:11},{from:41,to:38},{from:57,to:0}]};
+    [8,13,17,22,26,31,40,44,49,58].forEach(i=>G.board.tiles[i]={type:'bonus',label:'🦢 Χήνα',note:'Ρίξε ξανά!'});
+    G.board.tiles[5]={type:'event',label:'Γέφυρα',note:'Πήγαινε στο 12'};G.board.tiles[18]={type:'skip',label:'Πανδοχείο',note:'Χάσε 1 σειρά'};G.board.tiles[41]={type:'penalty',label:'Λαβύρινθος',note:'Γύρνα στο 39'};G.board.tiles[51]={type:'jail',label:'Φυλακή',note:'Περίμενε να σε ελευθερώσουν'};G.board.tiles[57]={type:'penalty',label:'💀 Θάνατος',note:'Ξεκίνα από την αρχή!'};
+    G.pieces=[{id:uid('p'),name:'Παίκτης 1',color:'#e23b3b',shape:'🦢'},{id:uid('p'),name:'Παίκτης 2',color:'#5aa9ff',shape:'🦆'}];}
+  else if(t==='trivialp'){G.meta={title:'Τροχός Γνώσεων',author:'',pmin:2,pmax:6,age:12,time:'60',desc:'Απάντησε ερωτήσεις 6 κατηγοριών και μάζεψε τα «κομμάτια της πίτας»!',goal:'Μάζεψε και τις 6 κατηγορίες και απάντησε την τελική ερώτηση.'};
+    G.board={mode:'loop',rows:8,cols:8,bg:'#1a1424',tiles:{0:{type:'start',label:'ΚΕΝΤΡΟ'}},conns:[]};
+    const cats=['Γεωγραφία','Ιστορία','Επιστήμη','Τέχνες','Αθλητισμός','Ψυχαγωγία'];const catCol=['#5aa9ff','#e5b567','#8ce99a','#b197fc','#ff922b','#ffa8a8'];
+    const n=2*8+2*8-4;for(let i=1;i<n;i++){const ci=i%6;G.board.tiles[i]={type:'chance',label:cats[ci],color:catCol[ci],note:'Ερώτηση: '+cats[ci]};}
+    G.decks=cats.map((c,i)=>({id:uid('d'),name:c,color:catCol[i],cards:[{title:c+' 1',text:'Γράψε εδώ την ερώτηση...'},{title:c+' 2',text:'Γράψε εδώ την ερώτηση...'}]}));
+    G.pieces=[{id:uid('p'),name:'Παίκτης 1',color:'#e23b3b',shape:'🥧'},{id:uid('p'),name:'Παίκτης 2',color:'#5aa9ff',shape:'🥧'}];}
+  else if(t==='scrabble'){G.meta={title:'Λέξεις',author:'',pmin:2,pmax:4,age:10,time:'45',desc:'Φτιάξε λέξεις με γράμματα-πλακίδια σε πλέγμα 15×15 και μάζεψε πόντους!',goal:'Ο παίκτης με τους περισσότερους πόντους στο τέλος κερδίζει.'};
+    G.board={mode:'grid',rows:15,cols:15,bg:'#132018',tiles:{},conns:[]};
+    const put=(list,type,label,color)=>list.forEach(rc=>{G.board.tiles[rc[0]*15+rc[1]]={type,label,color};});
+    put([[0,0],[0,7],[0,14],[7,0],[7,14],[14,0],[14,7],[14,14]],'penalty','3Λ','#e07a5f');
+    put([[1,1],[2,2],[3,3],[4,4],[10,10],[11,11],[12,12],[13,13],[1,13],[2,12],[3,11],[4,10],[13,1],[12,2],[11,3],[10,4]],'bonus','2Λ','#f2a5a5');
+    put([[1,5],[1,9],[5,1],[5,5],[5,9],[5,13],[9,1],[9,5],[9,9],[9,13],[13,5],[13,9]],'event','3Γ','#5aa9ff');
+    put([[0,3],[0,11],[2,6],[2,8],[3,0],[3,7],[3,14],[6,2],[6,6],[6,8],[6,12],[7,3],[7,11],[8,2],[8,6],[8,8],[8,12],[11,0],[11,7],[11,14],[12,6],[12,8],[14,3],[14,11]],'chance','2Γ','#a5d8ff');
+    G.board.tiles[7*15+7]={type:'finish',label:'★',color:'#ffe066'};
+    G.pieces=[];}
+  else if(t==='battleship'){G.meta={title:'Ναυμαχία',author:'',pmin:2,pmax:2,age:7,time:'20',desc:'Κρύψε τα πλοία σου στο πλέγμα 10×10 και βύθισε τα πλοία του αντιπάλου!',goal:'Βύθισε πρώτος όλα τα πλοία του αντιπάλου.'};
+    G.board={mode:'grid',rows:10,cols:10,bg:'#0e2030',tiles:{},conns:[]};
+    for(let i=0;i<100;i++)G.board.tiles[i]={type:'event',label:'',color:'#2e6da4'};
+    G.rules={setup:'Κάθε παίκτης τοποθετεί κρυφά 5 πλοία (μεγέθους 2-5) στο δικό του πλέγμα.',play:'Στη σειρά σου πες συντεταγμένες (π.χ. Γ4). Ο αντίπαλος λέει «νερό» ή «χτύπημα».',special:'5 πλοία: Αεροπλανοφόρο(5), Θωρηκτό(4), Καταδρομικό(3), Υποβρύχιο(3), Αντιτορπιλικό(2).',win:'Όποιος βυθίσει πρώτος όλα τα πλοία του αντιπάλου κερδίζει.'};
+    G.pieces=[{id:uid('p'),name:'Στόλος Α',color:'#e23b3b',shape:'🚢'},{id:uid('p'),name:'Στόλος Β',color:'#5aa9ff',shape:'⛴️'}];}
+  else if(t==='pandemic'){G.meta={title:'Πανδημία',author:'',pmin:2,pmax:4,age:10,time:'60',desc:'Συνεργαστείτε ως ομάδα ειδικών για να σταματήσετε 4 ασθένειες πριν εξαπλωθούν παγκοσμίως!',goal:'Βρείτε και τα 4 αντίδοτα (συνεργατικό — κερδίζετε ή χάνετε όλοι μαζί).'};
+    const cities=[['Αθήνα',440,300,'#2b333e'],['Λονδίνο',330,150,'#5aa9ff'],['Νέα Υόρκη',150,180,'#5aa9ff'],['Κάιρο',470,360,'#2b333e'],['Μόσχα',560,180,'#2b333e'],['Πεκίνο',720,220,'#e23b3b'],['Τόκιο',790,240,'#e23b3b'],['Σίδνεϊ',800,520,'#e23b3b'],['Λάγος',360,430,'#e5b567'],['Σάο Πάολο',210,470,'#e5b567'],['Λος Άντζελες',70,260,'#e5b567'],['Δελχί',640,320,'#2b333e']];
+    const nodes=cities.map(c=>({id:uid('n'),x:c[1],y:c[2],name:c[0],color:c[3]}));
+    const N=n=>nodes.find(x=>x.name===n).id;
+    const links=[['Νέα Υόρκη','Λονδίνο'],['Λονδίνο','Αθήνα'],['Λονδίνο','Μόσχα'],['Αθήνα','Κάιρο'],['Αθήνα','Μόσχα'],['Μόσχα','Δελχί'],['Κάιρο','Λάγος'],['Δελχί','Πεκίνο'],['Πεκίνο','Τόκιο'],['Τόκιο','Σίδνεϊ'],['Λάγος','Σάο Πάολο'],['Σάο Πάολο','Λος Άντζελες'],['Λος Άντζελες','Νέα Υόρκη'],['Δελχί','Σίδνεϊ']].map(l=>({a:N(l[0]),b:N(l[1]),color:'#9aa7b6',label:''}));
+    G.board={mode:'free',bg:'#0c1826',free:{w:880,h:600,regions:[],nodes,links}};
+    G.decks=[{id:uid('d'),name:'Λοίμωξης',color:'#e23b3b',cards:cities.map(c=>({title:c[0],text:'Πρόσθεσε κύβο ασθένειας'}))},{id:uid('d'),name:'Παίκτη',color:'#5aa9ff',cards:cities.map(c=>({title:c[0],text:''})).concat([{title:'ΕΠΙΔΗΜΙΑ!',text:'Αύξησε τον ρυθμό μόλυνσης'},{title:'Ειδική δράση',text:'Παίξε οποιαδήποτε στιγμή'}])}];
+    G.rules={setup:'Τοποθέτησε ερευνητικό κέντρο στην Αθήνα. Μοίρασε κάρτες παίκτη. Μόλυνε 9 πόλεις αρχικά.',play:'4 ενέργειες: μετακίνηση, θεραπεία (αφαίρεσε κύβο), χτίσιμο κέντρου, ανακάλυψη αντίδοτου (5 ίδιες κάρτες). Μετά τράβα 2 κάρτες παίκτη & μόλυνε πόλεις.',special:'Στις ΕΠΙΔΗΜΙΕΣ ο ρυθμός μόλυνσης ανεβαίνει. 3+ κύβοι σε πόλη = «ξέσπασμα» στους γείτονες.',win:'Κερδίζετε αν βρείτε 4 αντίδοτα. Χάνετε αν τελειώσουν οι κύβοι/κάρτες ή γίνουν 8 ξεσπάσματα.'};
+    G.pieces=[{id:uid('p'),name:'Γιατρός',color:'#e23b3b',shape:'⚕️'},{id:uid('p'),name:'Επιστήμονας',color:'#5aa9ff',shape:'🔬'},{id:uid('p'),name:'Συντονιστής',color:'#e5b567',shape:'📋'},{id:uid('p'),name:'Ερευνητής',color:'#b197fc',shape:'🔎'}];}
+  if(!G.pieces.length)G.pieces=[{id:uid('p'),name:'Παίκτης 1',color:'#e23b3b',shape:'🔴'},{id:uid('p'),name:'Παίκτης 2',color:'#5aa9ff',shape:'🔵'}];
+  ensureBoard();play=null;resetSel();save();refreshAll();toast('🚀 Πρότυπο φορτώθηκε!');goTab('board');}
+
+/* ============ PRINT ============ */
+function printWindow(title,body){const w=window.open('','_blank');w.document.write('<!DOCTYPE html><html lang="el"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>body{font-family:"Segoe UI",Arial,sans-serif;color:#111;margin:20px}h1{font-size:22px}h2{font-size:16px;margin-top:16px}.board{display:grid;gap:3px;margin:0 auto}.tile{border:2px solid #333;border-radius:6px;min-height:60px;padding:4px;font-size:10px;display:flex;flex-direction:column;justify-content:space-between}.tnum{font-weight:800;opacity:.6}.tlabel{font-weight:800}.ctr{display:flex;align-items:center;justify-content:center;text-align:center;border:1px dashed #999}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.pc{border:1px solid #333;border-radius:8px;min-height:150px;padding:8px;page-break-inside:avoid;display:flex;flex-direction:column}.pc h3{margin:0 0 6px;border-bottom:2px solid #333;padding-bottom:4px}.pc .t{font-size:10px;text-transform:uppercase;opacity:.6;margin-top:auto}.dgrid{display:grid;gap:1px;background:#333;width:fit-content;margin:0 auto}.dc{width:26px;height:26px;display:grid;place-items:center;font-size:15px}.fc{position:relative;border:1px solid #333;margin:0 auto}.reg{position:absolute;border:2px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;text-align:center;padding:3px}p{white-space:pre-wrap;line-height:1.5}@media print{.noprint{display:none}}</style></head><body><div class="noprint" style="text-align:right;margin-bottom:10px"><button onclick="print()">🖨️ Εκτύπωση</button></div>'+body+'</body></html>');w.document.close();}
+function printBoard(){const m=G.board.mode;
+  if(m==='hex'){printWindow('Ταμπλό — '+G.meta.title,'<h1>'+esc(G.meta.title||'Ταμπλό')+'</h1>'+hexSVG(false));return;}
+  if(m==='dungeon'){const d=G.board.dungeon;let cells='';for(let r=0;r<d.rows;r++)for(let c=0;c<d.cols;c++){const cell=d.cells[r+'_'+c]||{};const t=cell.t||'floor';cells+='<div class="dc" style="background:'+(DT[t]||DT.floor).color+'">'+(cell.i||'')+'</div>';}printWindow('Ταμπλό',' <h1>'+esc(G.meta.title||'Μπουντρούμι')+'</h1><div class="dgrid" style="grid-template-columns:repeat('+d.cols+',26px)">'+cells+'</div>');return;}
+  if(m==='free'){const f=G.board.free;let svg='<svg width="'+f.w+'" height="'+f.h+'" style="position:absolute;inset:0">';f.links.forEach(l=>{const a=freeItem(l.a),b=freeItem(l.b);if(a&&b){const ca=itemCenter(a),cb=itemCenter(b);svg+='<line x1="'+ca.x+'" y1="'+ca.y+'" x2="'+cb.x+'" y2="'+cb.y+'" stroke="'+(l.color||'#666')+'" stroke-width="5"/>';if(l.label)svg+='<text x="'+((ca.x+cb.x)/2)+'" y="'+((ca.y+cb.y)/2)+'" font-size="12" text-anchor="middle" font-weight="bold">'+esc(l.label)+'</text>';}});svg+='</svg>';
+    let regs='';f.regions.forEach(r=>{regs+='<div class="reg'+(r.shape==='circle'?'" style="border-radius:50%;':'" style="')+'left:'+r.x+'px;top:'+r.y+'px;width:'+r.w+'px;height:'+r.h+'px;background:'+r.color+'">'+esc(r.name)+'</div>';});
+    f.nodes.forEach(n=>{regs+='<div style="position:absolute;left:'+(n.x-7)+'px;top:'+(n.y-7)+'px;width:14px;height:14px;border-radius:50%;background:'+n.color+';border:2px solid #333"></div><div style="position:absolute;left:'+(n.x+10)+'px;top:'+(n.y-8)+'px;font-size:11px;font-weight:700">'+esc(n.name)+'</div>';});
+    const bgStyle=f.img?('background:'+(G.board.bg||'#fff')+' url('+f.img+') 0 0/100% 100% no-repeat'):('background:'+(G.board.bg||'#fff'));
+    printWindow('Ταμπλό','<h1>'+esc(G.meta.title||'Χάρτης')+'</h1><div class="fc" style="width:'+f.w+'px;height:'+f.h+'px;'+bgStyle+'">'+svg+regs+'</div>');return;}
+  const{rows,cols}=G.board;const positions=tilePositions();let cells='';positions.forEach(p=>{const td=tileData(p.index);const info=TYPES[td.type];const bg=td.color||info.color;const bgstyle=td.img?('background:url('+td.img+') center/cover;color:#fff;text-shadow:0 1px 2px #000'):('background:'+bg+';color:'+contrast(bg));cells+='<div class="tile" style="grid-row:'+p.r+';grid-column:'+p.c+';'+bgstyle+'"><div class="tnum">'+(p.index+1)+'</div><div style="text-align:center;font-size:18px">'+info.icon+'</div><div class="tlabel">'+esc(td.label||(td.type!=='normal'?info.label:''))+'</div></div>';});if(m==='loop'&&cols>2&&rows>2)cells+='<div class="tile ctr" style="grid-row:2/'+rows+';grid-column:2/'+cols+'"><div><h2>'+esc(G.meta.title)+'</h2></div></div>';
+  printWindow('Ταμπλό — '+G.meta.title,'<h1>'+esc(G.meta.title||'Ταμπλό')+'</h1><div class="board" style="grid-template-columns:repeat('+cols+',1fr);width:'+Math.min(cols*90,760)+'px">'+cells+'</div>');}
+function printCards(){if(!G.decks.length){toast('Δεν υπάρχουν κάρτες');return;}let body='<h1>Κάρτες — '+esc(G.meta.title)+'</h1>';G.decks.forEach(d=>{if(!d.cards.length)return;body+='<h2>🃏 '+esc(d.name)+'</h2><div class="cards">'+d.cards.map(c=>'<div class="pc" style="border-top:5px solid '+d.color+'"><h3>'+esc(c.title||'—')+'</h3>'+(c.img?'<img src="'+c.img+'" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:4px">':'')+'<p>'+esc(c.text)+'</p><div class="t">'+esc(d.name)+'</div></div>').join('')+'</div>';});printWindow('Κάρτες',body);}
+function printRules(){const r=G.rules,m=G.meta;printWindow('Κανόνες — '+m.title,'<h1>'+esc(m.title||'Κανόνες')+'</h1><p><b>Παίκτες:</b> '+m.pmin+'–'+m.pmax+' · <b>Ηλικία:</b> '+m.age+'+ · <b>Διάρκεια:</b> '+esc(m.time)+'′</p><p>'+esc(m.desc)+'</p><h2>🎯 Στόχος</h2><p>'+esc(m.goal)+'</p><h2>🛠️ Προετοιμασία</h2><p>'+esc(r.setup)+'</p><h2>🎮 Πώς παίζεται</h2><p>'+esc(r.play)+'</p><h2>⚡ Ειδικοί κανόνες</h2><p>'+esc(r.special)+'</p><h2>🏆 Πώς κερδίζεις</h2><p>'+esc(r.win)+'</p>');}
+
+/* ============ EXPORT PNG ============ */
+function getBoardSVG(){const m=G.board.mode;let inner='',w,h;
+  if(m==='hex'){const g=getHexCells();w=g.width;h=g.height;const raw=hexSVG(false);inner='<rect width="'+w+'" height="'+h+'" fill="'+(G.board.bg||'#0e1720')+'"/>'+raw.replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'');}
+  else if(m==='dungeon'){const d=G.board.dungeon;const cs=28;w=d.cols*cs;h=d.rows*cs;inner='<rect width="'+w+'" height="'+h+'" fill="#0b0e12"/>';for(let r=0;r<d.rows;r++)for(let c=0;c<d.cols;c++){const cell=d.cells[r+'_'+c]||{};const t=cell.t||'floor';const x=c*cs,y=r*cs;inner+='<rect x="'+x+'" y="'+y+'" width="'+cs+'" height="'+cs+'" fill="'+(DT[t]||DT.floor).color+'" stroke="#0b0e12" stroke-width="0.5"/>';if(cell.i)inner+='<text x="'+(x+cs/2)+'" y="'+(y+cs/2+6)+'" font-size="16" text-anchor="middle">'+cell.i+'</text>';}}
+  else if(m==='free'){const f=G.board.free;w=f.w;h=f.h;inner='<rect width="'+w+'" height="'+h+'" fill="'+(G.board.bg||'#141a22')+'"/>';if(f.img)inner+='<image href="'+f.img+'" x="0" y="0" width="'+w+'" height="'+h+'" preserveAspectRatio="none"/>';
+    f.links.forEach(l=>{const a=freeItem(l.a),b=freeItem(l.b);if(a&&b){const ca=itemCenter(a),cb=itemCenter(b);inner+='<line x1="'+ca.x+'" y1="'+ca.y+'" x2="'+cb.x+'" y2="'+cb.y+'" stroke="'+(l.color||'#9aa7b6')+'" stroke-width="5" stroke-linecap="round"/>';if(l.label)inner+='<text x="'+((ca.x+cb.x)/2)+'" y="'+((ca.y+cb.y)/2+4)+'" font-size="12" fill="#fff" text-anchor="middle" font-weight="bold" stroke="#000" stroke-width="0.5">'+esc(l.label)+'</text>';}});
+    f.regions.forEach(r=>{const rx=r.shape==='circle'?Math.min(r.w,r.h)/2:10;inner+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="'+rx+'" fill="'+r.color+'" stroke="rgba(0,0,0,.4)" stroke-width="2"/><text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+4)+'" font-size="13" font-weight="bold" text-anchor="middle" fill="'+contrast(r.color)+'">'+esc(r.name)+'</text>';});
+    f.nodes.forEach(n=>{inner+='<circle cx="'+n.x+'" cy="'+n.y+'" r="8" fill="'+n.color+'" stroke="#fff" stroke-width="3"/><text x="'+(n.x+11)+'" y="'+(n.y+4)+'" font-size="12" font-weight="bold" fill="#fff" stroke="#000" stroke-width="0.4">'+esc(n.name)+'</text>';});}
+  else{const size=76;const{rows,cols}=G.board;w=cols*size;h=rows*size;inner='<rect width="'+w+'" height="'+h+'" fill="'+(G.board.bg||'#141a22')+'"/>';
+    if(m==='loop'&&cols>2&&rows>2)inner+='<rect x="'+size+'" y="'+size+'" width="'+((cols-2)*size)+'" height="'+((rows-2)*size)+'" fill="'+(G.board.bg||'#141a22')+'" stroke="#2b333e" stroke-dasharray="4"/><text x="'+(w/2)+'" y="'+(h/2)+'" font-size="26" font-weight="bold" fill="#e8edf3" text-anchor="middle">'+esc(G.meta.title||'')+'</text>';
+    tilePositions().forEach(p=>{const x=(p.c-1)*size,y=(p.r-1)*size;const td=tileData(p.index);const t=TYPES[td.type];const bg=td.color||t.color;const tc=td.img?'#fff':contrast(bg);
+      if(td.img)inner+='<image href="'+td.img+'" x="'+x+'" y="'+y+'" width="'+size+'" height="'+size+'" preserveAspectRatio="xMidYMid slice"/>';else inner+='<rect x="'+x+'" y="'+y+'" width="'+size+'" height="'+size+'" fill="'+bg+'"/>';
+      inner+='<rect x="'+(x+1)+'" y="'+(y+1)+'" width="'+(size-2)+'" height="'+(size-2)+'" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="2" rx="6"/>';
+      inner+='<text x="'+(x+6)+'" y="'+(y+15)+'" font-size="10" font-weight="bold" fill="'+tc+'" opacity="0.75">'+(p.index+1)+'</text>';
+      if(t.icon)inner+='<text x="'+(x+size/2)+'" y="'+(y+size/2+7)+'" font-size="22" text-anchor="middle">'+t.icon+'</text>';
+      const label=td.label||(td.type!=='normal'?t.label:'');if(label)inner+='<text x="'+(x+size/2)+'" y="'+(y+size-7)+'" font-size="9" font-weight="bold" text-anchor="middle" fill="'+tc+'">'+esc(label)+'</text>';});}
+  return{svg:'<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'+inner+'</svg>',w,h};}
+function loadImg(src){return new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=src;});}
+async function exportCardsPNG(){const all=[];G.decks.forEach(d=>d.cards.forEach(c=>all.push({d,c})));if(!all.length){toast('Δεν υπάρχουν κάρτες');return;}
+  toast('⏳ Ετοιμάζω τις κάρτες...');
+  const imgs=await Promise.all(all.map(x=>x.c.img?loadImg(x.c.img):Promise.resolve(null)));
+  const cw=300,ch=200,gap=20,pad=28,cols=3,head=54;const rows=Math.ceil(all.length/cols);
+  const W=pad*2+cols*cw+(cols-1)*gap,H=head+pad+rows*ch+(rows-1)*gap+pad;const sc=2;
+  const cv=document.createElement('canvas');cv.width=W*sc;cv.height=H*sc;const ctx=cv.getContext('2d');ctx.scale(sc,sc);
+  ctx.fillStyle='#f4f5f7';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#15181d';ctx.font='bold 22px Segoe UI, Arial';ctx.textBaseline='top';ctx.fillText((G.meta.title||'Κάρτες')+' — φύλλο κοπής',pad,20);
+  function wrap(text,x,y,maxW,lh,max){ctx.font='13px Segoe UI, Arial';ctx.fillStyle='#333';const words=(text||'').split(/\s+/);let line='',yy=y,n=0;for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){ctx.fillText(line,x,yy);line=w;yy+=lh;if(++n>=max){ctx.fillText('…',x,yy);return;}}else line=t;}if(line)ctx.fillText(line,x,yy);}
+  all.forEach((x,i)=>{const col=i%cols,row=Math.floor(i/cols);const X=pad+col*(cw+gap),Y=head+pad+row*(ch+gap);
+    ctx.fillStyle='#fff';roundRect(ctx,X,Y,cw,ch,10);ctx.fill();
+    ctx.strokeStyle='#c8ccd2';ctx.setLineDash([4,4]);ctx.lineWidth=1;roundRect(ctx,X,Y,cw,ch,10);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=x.d.color;roundRect(ctx,X,Y,cw,8,4);ctx.fill();
+    ctx.fillStyle='#15181d';ctx.font='bold 16px Segoe UI, Arial';ctx.fillText((x.c.title||'—').slice(0,34),X+14,Y+20);
+    let ty=Y+46;const im=imgs[i];if(im){const iw=cw-28,ih=88;ctx.save();roundRect(ctx,X+14,ty,iw,ih,6);ctx.clip();const r=Math.max(iw/im.width,ih/im.height);ctx.drawImage(im,X+14+(iw-im.width*r)/2,ty+(ih-im.height*r)/2,im.width*r,im.height*r);ctx.restore();ty+=ih+8;}
+    wrap(x.c.text,X+14,ty,cw-28,18,x.c.img?3:6);
+    ctx.fillStyle='#8a8f98';ctx.font='10px Segoe UI, Arial';ctx.fillText((x.d.name||'').toUpperCase(),X+14,Y+ch-18);});
+  cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(G.meta.title||'καρτες').replace(/[^\wα-ωΑ-Ωά-ώΆ-Ώ]+/g,'_')+'_καρτες.png';a.click();toast('🖼️ Οι κάρτες εξήχθησαν');},'image/png');}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function exportPNG(){const{svg,w,h}=getBoardSVG();const img=new Image();img.onload=()=>{const scale=2;const cv=document.createElement('canvas');cv.width=w*scale;cv.height=h*scale;const ctx=cv.getContext('2d');ctx.fillStyle=G.board.bg||'#141a22';ctx.fillRect(0,0,cv.width,cv.height);ctx.scale(scale,scale);ctx.drawImage(img,0,0);cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(G.meta.title||'ταμπλο').replace(/[^\wα-ωΑ-Ωά-ώΆ-Ώ]+/g,'_')+'.png';a.click();toast('🖼️ PNG εξήχθη');},'image/png');};img.onerror=()=>toast('⚠️ Σφάλμα εξαγωγής');img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);}
+
+/* ============ REFRESH / INIT ============ */
+function refreshAll(){document.getElementById('m-title').value=G.meta.title||'';document.getElementById('m-author').value=G.meta.author||'';document.getElementById('m-pmin').value=G.meta.pmin||2;document.getElementById('m-pmax').value=G.meta.pmax||4;document.getElementById('m-age').value=G.meta.age||6;document.getElementById('m-time').value=G.meta.time||'';document.getElementById('m-desc').value=G.meta.desc||'';document.getElementById('m-goal').value=G.meta.goal||'';document.getElementById('d-count').value=G.dice.count;document.getElementById('d-sides').value=G.dice.sides;fillRules();renderBoard();renderDecks();renderPieces();const ed=document.getElementById('editorBox');ed.className='empty';ed.textContent='Επίλεξε στοιχείο για επεξεργασία.';}
+loadCurrent();refreshAll();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+</script>
+</body>
+</html>
